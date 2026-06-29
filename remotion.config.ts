@@ -1,6 +1,8 @@
 import { Config } from "@remotion/cli/config";
 
 Config.setVideoImageFormat("jpeg");
+// yuv420p (rango limitado) para máxima compatibilidad con celulares/reproductores.
+Config.setPixelFormat("yuv420p");
 Config.setOverwriteOutput(true);
 Config.setConcurrency(2);
 // Chromium is pre-installed in this environment (no download needed).
