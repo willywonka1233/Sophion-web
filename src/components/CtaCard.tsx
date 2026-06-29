@@ -39,7 +39,7 @@ export const CtaCard: React.FC<{ keyword: string; accent: string; tail: string }
           textShadow: "0 6px 20px rgba(0,0,0,0.9)",
         }}
       >
-        👇 COMENTÁ
+        👇 COMENTA
       </div>
       <div
         style={{

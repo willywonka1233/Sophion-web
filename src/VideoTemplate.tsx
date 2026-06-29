@@ -49,7 +49,7 @@ export const VideoTemplate: React.FC<{
               <CtaCard
                 keyword={script.keyword}
                 accent={script.accent}
-                tail="y te lo mando al toque 📩"
+                tail="y te envío el acceso 📩"
               />
             ) : (
               <Subtitle text={seg.text} accent={script.accent} durationInFrames={dur} />
