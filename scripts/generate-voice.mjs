@@ -28,8 +28,11 @@ const USE_ELEVEN = !!process.env.ELEVENLABS_API_KEY;
 
 // Edge TTS
 const EDGE_VOICE = process.env.VOICE || "es-US-AlonsoNeural";
-const EDGE_RATE = process.env.RATE || "-6%";
+const EDGE_RATE = process.env.RATE || "+10%"; // voz más ágil de origen
 const EDGE_PITCH = process.env.PITCH || "-2Hz";
+// Aire entre frases (segundos). Pequeño = dinámico, sin silencios muertos.
+const GAP = parseFloat(process.env.GAP || "0.1");
+const FLOOR = parseFloat(process.env.FLOOR || "0.8"); // duración mínima por corte
 const SSL_CERT_FILE =
   process.env.SSL_CERT_FILE ||
   "/root/.local/lib/python3.11/site-packages/certifi/cacert.pem";
@@ -100,12 +103,20 @@ for (const script of SCRIPTS) {
     // Eco sutil + normalización de volumen.
     execFileSync(FFMPEG, [
       "-y", "-i", raw,
-      "-af", "aecho=0.85:0.9:90:0.22,loudnorm=I=-16:TP=-1.5:LRA=11",
+      // Recorta silencio inicial y colapsa pausas internas/finales largas
+      // (Edge TTS las agrega en puntos y "..."), dejando un beat corto.
+      // Luego eco sutil + normalización.
+      "-af",
+      "silenceremove=start_periods=1:start_threshold=-45dB:detection=peak:" +
+        "stop_periods=-1:stop_duration=0.2:stop_threshold=-40dB:detection=peak," +
+        "aecho=0.8:0.85:80:0.16,loudnorm=I=-16:TP=-1.5:LRA=11",
       echoed,
     ], { stdio: "ignore" });
 
     const d = probeDur(echoed);
-    const frames = Math.max(Math.ceil((d + 0.4) * FPS), Math.round(seg.sec * FPS));
+    // Duración del corte = voz + pequeño aire (GAP), con un piso mínimo.
+    // (Antes usaba seg.sec como mínimo y dejaba silencios largos.)
+    const frames = Math.max(Math.ceil((d + GAP) * FPS), Math.round(FLOOR * FPS));
     segFrames.push(frames);
 
     const padded = path.join(TMP, `${script.id}_${i}_pad.mp3`);
