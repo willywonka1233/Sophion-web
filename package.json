@@ -1,0 +1,23 @@
+{
+  "name": "sophion-web",
+  "version": "1.0.0",
+  "description": "Remotion video ads for Sophion ebooks (sistema nervioso, reset de dopamina, enfoque profundo)",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render",
+    "render:all": "node scripts/render-all.mjs",
+    "voice": "node scripts/generate-voice.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.290",
+    "@remotion/google-fonts": "4.0.290",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.290"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "typescript": "5.7.3"
+  }
+}
