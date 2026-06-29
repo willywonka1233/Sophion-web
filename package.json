@@ -7,7 +7,8 @@
     "dev": "remotion studio",
     "render": "remotion render",
     "render:all": "node scripts/render-all.mjs",
-    "voice": "node scripts/generate-voice.mjs"
+    "voice": "node scripts/generate-voice.mjs",
+    "finalize": "node scripts/finalize.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.290",
