@@ -1,0 +1,19 @@
+{
+  "name": "sophion-whatsapp-bot",
+  "version": "0.1.0",
+  "description": "Bot de ventas por WhatsApp para Sophion Club: responde, califica y cierra con link de pago.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  }
+}
