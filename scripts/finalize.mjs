@@ -18,6 +18,11 @@ const IDS = [
   "enfoque-profundo-a", "enfoque-profundo-b",
 ];
 
+// SPEED=1.0 normal; 1.2 = 20% más rápido (acelera video + voz + música juntos)
+const SPEED = parseFloat(process.env.SPEED || "1.0");
+const vSpeed = SPEED !== 1 ? `setpts=PTS/${SPEED},` : "";
+const aSpeed = SPEED !== 1 ? `atempo=${SPEED},` : "";
+
 mkdirSync("out/final", { recursive: true });
 
 for (const id of IDS) {
@@ -31,14 +36,14 @@ for (const id of IDS) {
   if (hasVoice) {
     args.push("-i", voice, "-i", "public/bed.mp3");
     filter =
-      "[0:v]hqdn3d=3:2:4:4,unsharp=5:5:0.9:5:5:0.3,eq=contrast=1.05:saturation=1.08[v];" +
-      "[1:a]volume=2.2[vo];[2:a]volume=0.10[bd];[vo][bd]amix=inputs=2:duration=first[mx];" +
+      `[0:v]${vSpeed}hqdn3d=3:2:4:4,unsharp=5:5:0.9:5:5:0.3,eq=contrast=1.05:saturation=1.08[v];` +
+      `[1:a]${aSpeed}volume=2.2[vo];[2:a]volume=0.10[bd];[vo][bd]amix=inputs=2:duration=first[mx];` +
       "[mx]loudnorm=I=-14:TP=-1.5:LRA=11[a]";
     amap = "[a]";
   } else {
     filter =
-      "[0:v]hqdn3d=3:2:4:4,unsharp=5:5:0.9:5:5:0.3,eq=contrast=1.05:saturation=1.08[v];" +
-      "[0:a]loudnorm=I=-14:TP=-1.5:LRA=11[a]";
+      `[0:v]${vSpeed}hqdn3d=3:2:4:4,unsharp=5:5:0.9:5:5:0.3,eq=contrast=1.05:saturation=1.08[v];` +
+      `[0:a]${aSpeed}loudnorm=I=-14:TP=-1.5:LRA=11[a]`;
     amap = "[a]";
   }
   args.push(
