@@ -9,8 +9,8 @@ import { BottomScrim, Grain, ProgressBar, Vignette } from "./components/Overlays
 
 const FPS = 30;
 
-// Pista de audio de fondo (bed). Reemplazable dejando public/music.mp3.
-const BED_SRC = "clips/brain.mp4";
+// Pista de audio de fondo (bed) ~75s. Reemplazable por tu propia música.
+const BED_SRC = "bed.mp3";
 
 export const VideoTemplate: React.FC<{
   script: VideoScript;
@@ -23,7 +23,7 @@ export const VideoTemplate: React.FC<{
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {/* Audio de fondo (se reemplaza por music.mp3 / voz de ElevenLabs luego) */}
-      <Audio src={staticFile(BED_SRC)} volume={hasVoice ? 0.12 : 0.22} />
+      <Audio src={staticFile(BED_SRC)} volume={hasVoice ? 0.1 : 0.22} />
 
       {/* Voz en off (ElevenLabs con eco). Se activa al renderizar con voz. */}
       {hasVoice && (

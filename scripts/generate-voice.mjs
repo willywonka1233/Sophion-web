@@ -1,43 +1,45 @@
-// Genera la voz en off (ElevenLabs) por segmento, le aplica eco y arma
-// public/voice/<id>.mp3 + public/voice/timing.json para que el video quede
-// sincronizado con la narración.
+// Genera la voz en off por segmento, le aplica eco y arma public/voice/<id>.mp3
+// + public/voice/timing.json para sincronizar el video con la narración.
+//
+// Por defecto usa EDGE TTS (Microsoft) — GRATIS, sin API key.
+// Si defines ELEVENLABS_API_KEY, usa ElevenLabs en su lugar.
 //
 // Uso:
-//   ELEVENLABS_API_KEY=xxxx node scripts/generate-voice.mjs
+//   node --import tsx scripts/generate-voice.mjs
 // Opcionales:
-//   ELEVEN_VOICE_ID=...   (default: voz masculina grave multilingüe)
-//   ELEVEN_MODEL=...      (default: eleven_multilingual_v2)
+//   VOICE=es-US-AlonsoNeural   (voz Edge TTS; default Alonso, masculino neutro)
+//   RATE=-6%   PITCH=-2Hz      (ajuste de velocidad / tono para Edge)
+//   ELEVENLABS_API_KEY=...     (fuerza ElevenLabs)
+//   ELEVEN_VOICE_ID=...        (voz ElevenLabs)
 //
-// Después renderizá con voz:  npm run render:all  (con REMOTION_HAS_VOICE=1)
+// Después: REMOTION_HAS_VOICE=1 npm run render:all
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const FFMPEG =
-  require("@ffmpeg-installer/ffmpeg")?.path ||
-  process.env.FFMPEG_PATH ||
-  "ffmpeg";
+const FFMPEG = require("@ffmpeg-installer/ffmpeg").path;
 const FFPROBE = require("ffprobe-static").path;
 
 const FPS = 30;
-const API_KEY = process.env.ELEVENLABS_API_KEY;
-const VOICE_ID = process.env.ELEVEN_VOICE_ID || "pNInz6obpgDQGcFmaJgB"; // grave masculina
-const MODEL = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
+const USE_ELEVEN = !!process.env.ELEVENLABS_API_KEY;
 
-if (!API_KEY) {
-  console.error("Falta ELEVENLABS_API_KEY. Ejemplo:\n  ELEVENLABS_API_KEY=xxx node scripts/generate-voice.mjs");
-  process.exit(1);
-}
+// Edge TTS
+const EDGE_VOICE = process.env.VOICE || "es-US-AlonsoNeural";
+const EDGE_RATE = process.env.RATE || "-6%";
+const EDGE_PITCH = process.env.PITCH || "-2Hz";
+const SSL_CERT_FILE =
+  process.env.SSL_CERT_FILE ||
+  "/root/.local/lib/python3.11/site-packages/certifi/cacert.pem";
 
-// Importa los guiones (TS) vía tsx si está, si no parsea el texto manualmente.
-const { SCRIPTS } = await import("../src/data/scripts.ts").catch(async () => {
-  // Fallback: compilar al vuelo no disponible -> pedir tsx
-  console.error("No se pudo importar scripts.ts directamente. Instalá tsx: npm i -D tsx, y corré con: node --import tsx scripts/generate-voice.mjs");
-  process.exit(1);
-});
+// ElevenLabs
+const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
+const ELEVEN_VOICE = process.env.ELEVEN_VOICE_ID || "pNInz6obpgDQGcFmaJgB";
+const ELEVEN_MODEL = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
+
+const { SCRIPTS } = await import("../src/data/scripts.ts");
 
 const clean = (t) => t.replace(/\*/g, "").trim();
 
@@ -47,34 +49,32 @@ mkdirSync(VOICE_DIR, { recursive: true });
 rmSync(TMP, { recursive: true, force: true });
 mkdirSync(TMP, { recursive: true });
 
-async function tts(text, outFile) {
+async function ttsEdge(text, outFile) {
+  execFileSync(
+    "python3",
+    ["-m", "edge_tts", "--voice", EDGE_VOICE, `--rate=${EDGE_RATE}`,
+     `--pitch=${EDGE_PITCH}`, "--text", text, "--write-media", outFile],
+    { stdio: "ignore", env: { ...process.env, SSL_CERT_FILE } }
+  );
+}
+
+async function ttsEleven(text, outFile) {
   const res = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE}`,
     {
       method: "POST",
-      headers: {
-        "xi-api-key": API_KEY,
-        "Content-Type": "application/json",
-        Accept: "audio/mpeg",
-      },
+      headers: { "xi-api-key": ELEVEN_KEY, "Content-Type": "application/json", Accept: "audio/mpeg" },
       body: JSON.stringify({
-        text,
-        model_id: MODEL,
-        voice_settings: {
-          stability: 0.45,
-          similarity_boost: 0.8,
-          style: 0.35,
-          use_speaker_boost: true,
-        },
+        text, model_id: ELEVEN_MODEL,
+        voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true },
       }),
     }
   );
-  if (!res.ok) {
-    throw new Error(`ElevenLabs ${res.status}: ${await res.text()}`);
-  }
-  const buf = Buffer.from(await res.arrayBuffer());
-  writeFileSync(outFile, buf);
+  if (!res.ok) throw new Error(`ElevenLabs ${res.status}: ${await res.text()}`);
+  writeFileSync(outFile, Buffer.from(await res.arrayBuffer()));
 }
+
+const tts = USE_ELEVEN ? ttsEleven : ttsEdge;
 
 const probeDur = (f) =>
   parseFloat(
@@ -84,6 +84,7 @@ const probeDur = (f) =>
     ]).toString().trim()
   );
 
+console.log(`Motor de voz: ${USE_ELEVEN ? "ElevenLabs" : `Edge TTS (${EDGE_VOICE})`}`);
 const timing = {};
 
 for (const script of SCRIPTS) {
@@ -96,7 +97,7 @@ for (const script of SCRIPTS) {
     const raw = path.join(TMP, `${script.id}_${i}_raw.mp3`);
     const echoed = path.join(TMP, `${script.id}_${i}.mp3`);
     await tts(clean(seg.text), raw);
-    // Eco sutil + leve normalización.
+    // Eco sutil + normalización de volumen.
     execFileSync(FFMPEG, [
       "-y", "-i", raw,
       "-af", "aecho=0.85:0.9:90:0.22,loudnorm=I=-16:TP=-1.5:LRA=11",
@@ -104,24 +105,20 @@ for (const script of SCRIPTS) {
     ], { stdio: "ignore" });
 
     const d = probeDur(echoed);
-    // Duración del segmento = voz + 0.45s de aire, mínimo el original.
-    const frames = Math.max(Math.ceil((d + 0.45) * FPS), Math.round(seg.sec * FPS));
+    const frames = Math.max(Math.ceil((d + 0.4) * FPS), Math.round(seg.sec * FPS));
     segFrames.push(frames);
 
-    // Pad de silencio al final para alinear con el slot del segmento.
     const padded = path.join(TMP, `${script.id}_${i}_pad.mp3`);
-    const padSec = (frames / FPS - d).toFixed(3);
+    const totalSec = (frames / FPS).toFixed(3);
     execFileSync(FFMPEG, [
       "-y", "-i", echoed,
-      "-af", `apad=pad_dur=${padSec}`,
-      "-t", (frames / FPS).toFixed(3),
-      padded,
+      "-af", "apad",
+      "-t", totalSec, padded,
     ], { stdio: "ignore" });
     segFiles.push(padded);
-    console.log(`   seg ${i}: voz ${d.toFixed(2)}s -> ${frames} frames`);
+    console.log(`   seg ${i}: ${d.toFixed(2)}s -> ${frames} frames`);
   }
 
-  // Concatena todos los segmentos -> voice/<id>.mp3
   const listFile = path.join(TMP, `${script.id}_list.txt`);
   writeFileSync(listFile, segFiles.map((f) => `file '${f}'`).join("\n"));
   const out = path.join(VOICE_DIR, `${script.id}.mp3`);
@@ -131,8 +128,8 @@ for (const script of SCRIPTS) {
   ], { stdio: "ignore" });
 
   timing[script.id] = segFrames;
-  console.log(`   ✅ ${out} (total ${segFrames.reduce((a, b) => a + b, 0)} frames)`);
+  console.log(`   ✅ ${out} (${segFrames.reduce((a, b) => a + b, 0)} frames)`);
 }
 
 writeFileSync(path.join(VOICE_DIR, "timing.json"), JSON.stringify(timing, null, 2));
-console.log("\n✅ Voz generada. Ahora: REMOTION_HAS_VOICE=1 npm run render:all");
+console.log("\n✅ Voz lista. Ahora: REMOTION_HAS_VOICE=1 npm run render:all");
