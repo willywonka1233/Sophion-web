@@ -1,6 +1,8 @@
 /* ======================================================================
    SOPHION · Generador de Carruseles  —  app.js
-   Vanilla JS, sin dependencias de build.
+   Estilo "image-forward" (tipo neuroglobe): imagen a sangre completa,
+   texto abajo, titular en mayúsculas con palabras resaltadas en un color,
+   logo (barrita–logo–barrita) centrado en la portada.
    Exporta cada slide a PNG 1080x1350 con html2canvas; todo en .zip con JSZip.
    ====================================================================== */
 
@@ -8,22 +10,18 @@
   'use strict';
 
   const W = 1080, H = 1350;
-  const STORAGE_KEY = 'sophion_carousel_v1';
+  const STORAGE_KEY = 'sophion_carousel_v2';
+  const SWIPE_TEXT = 'DESLIZA';
 
   /* ----------------------------- Estado ----------------------------- */
   const DEFAULT_BRAND = {
     name: 'SOPHION',
-    handle: '@sophion',
+    handle: '@sophion.club',
     logo: null,
-    bgDeep: '#05060f',
-    bgMid: '#160b33',
-    accent: '#7c5cff',
-    accent2: '#3de0ff',
-    text: '#ffffff',
-    muted: '#b9b6d8',
-    fontDisplay: 'Space Grotesk',
+    accent: '#e7c46a',   // dorado de marca
+    bg: '#05070f',       // azul noche
+    fontDisplay: 'Archivo',
     fontBody: 'Inter',
-    starfield: true,
   };
 
   const state = {
@@ -37,30 +35,24 @@
     const base = {
       id: 's' + Math.random().toString(36).slice(2, 9),
       type,
-      kicker: '',
+      image: null,
       heading: '',
       body: '',
-      image: null,
-      bannerHeight: 48,
-      bannerPos: 50,
-      cta: 'Sigue · Comenta · Guarda · Comparte',
-      showIndex: true,
+      swipe: true,
     };
     if (type === 'cover') {
-      base.kicker = 'NEUROCIENCIA';
-      base.heading = 'TU FRASE CON GANCHO AQUÍ';
-      base.body = 'Subtítulo breve que refuerza el hook';
+      base.heading = 'Tu *titular* con gancho aquí';
     } else if (type === 'content') {
-      base.heading = 'Idea principal del slide';
-      base.body = 'Desarrolla la idea con un texto claro y respirable.';
+      base.heading = 'Idea *principal* del slide';
+      base.body = 'Desarrolla la idea con un texto claro y directo.';
     } else if (type === 'closing') {
-      base.heading = 'Guarda esto para releerlo';
-      base.body = 'Y compártelo con quien lo necesite.';
+      base.heading = '*Síguenos* para más';
+      base.swipe = false;
     }
     return base;
   }
 
-  /* ----------------------------- Utilidades de color ----------------------------- */
+  /* ----------------------------- Utilidades ----------------------------- */
   function hexToRgb(hex) {
     let h = (hex || '#000000').replace('#', '');
     if (h.length === 3) h = h.split('').map((c) => c + c).join('');
@@ -71,121 +63,64 @@
     const { r, g, b } = hexToRgb(hex);
     return `rgba(${r},${g},${b},${a})`;
   }
-
   function escapeHtml(s) {
     return (s || '').replace(/[&<>"']/g, (c) => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
     ));
   }
+  // escapa y convierte *palabra* en resaltado de color; los saltos de línea
+  // se conservan tal cual (el CSS usa white-space: pre-wrap)
+  function fmt(text) {
+    return escapeHtml(text).replace(/\*([^*\n]+)\*/g, '<span class="k">$1</span>');
+  }
 
-  /* ----------------------------- Aplicar variables de marca ----------------------------- */
-  function applyBrandVars(el, brand, slide) {
-    const v = {
-      '--bg-deep': brand.bgDeep,
-      '--bg-mid': brand.bgMid,
-      '--accent': brand.accent,
-      '--accent2': brand.accent2,
-      '--text': brand.text,
-      '--muted': brand.muted,
-      '--font-display': `'${brand.fontDisplay}'`,
-      '--font-body': `'${brand.fontBody}'`,
-      // derivados en rgba (evita color-mix por compatibilidad con html2canvas)
-      '--glow-accent': rgba(brand.accent, 0.28),
-      '--glow-accent2': rgba(brand.accent2, 0.20),
-      '--fade-deep': rgba(brand.bgDeep, 0.92),
-      '--kicker-border': rgba(brand.accent2, 0.45),
-      '--kicker-bg': rgba(brand.accent2, 0.10),
-      '--chip-border': rgba(brand.accent, 0.55),
-      '--chip-bg': rgba(brand.accent, 0.16),
-    };
-    for (const k in v) el.style.setProperty(k, v[k]);
-    if (slide) {
-      el.style.setProperty('--banner-h', slide.bannerHeight + '%');
-      el.style.setProperty('--banner-pos', slide.bannerPos + '%');
-    }
-    el.classList.toggle('has-stars', !!brand.starfield);
+  /* ----------------------------- Variables de marca ----------------------------- */
+  function applyBrandVars(el, brand) {
+    el.style.setProperty('--accent', brand.accent);
+    el.style.setProperty('--bg', brand.bg);
+    el.style.setProperty('--font-display', `'${brand.fontDisplay}'`);
+    el.style.setProperty('--font-body', `'${brand.fontBody}'`);
+    el.style.setProperty('--glow', rgba(brand.accent, 0.55));
   }
 
   /* ----------------------------- Markup de slide ----------------------------- */
-  function brandIdMarkup(brand) {
-    return brand.logo
+  function bgMarkup(slide) {
+    return slide.image
+      ? `<div class="bg" style="background-image:url('${slide.image}')"></div>`
+      : `<div class="bg is-empty"></div>`;
+  }
+  function dividerMarkup(brand) {
+    const mark = brand.logo
       ? `<img src="${brand.logo}" alt="logo" />`
-      : `<span class="name">${escapeHtml(brand.name)}</span>`;
+      : `<span class="mark">&#9670;</span>`;
+    return `<div class="divider"><span class="ln"></span>${mark}<span class="ln"></span></div>`;
   }
 
-  function bannerMarkup(slide) {
-    if (!slide.image) return `<div class="banner is-empty"></div>`;
-    return `<div class="banner" style="background-image:url('${slide.image}')"></div>`;
-  }
-
-  function slideMarkup(slide, brand, info) {
-    const kicker = slide.kicker ? `<span class="kicker"><span class="kdot"></span><span class="klabel">${escapeHtml(slide.kicker)}</span></span>` : '';
-    const heading = slide.heading ? `<h1 class="heading">${escapeHtml(slide.heading)}</h1>` : '';
-    const body = slide.body ? `<p class="body">${escapeHtml(slide.body)}</p>` : '';
+  function slideMarkup(slide, brand) {
+    const bg = bgMarkup(slide);
+    const scrim = `<div class="scrim"></div>`;
+    const heading = slide.heading ? `<h1 class="hl">${fmt(slide.heading)}</h1>` : '';
+    const body = slide.body ? `<p class="body">${fmt(slide.body)}</p>` : '';
+    const swipe = slide.swipe ? `<span class="swipe">${escapeHtml(SWIPE_TEXT)}</span>` : '';
 
     if (slide.type === 'cover') {
-      return `
-        ${bannerMarkup(slide)}
-        <div class="inner">
-          ${kicker}
-          ${heading}
-          ${body}
-        </div>
-        <div class="footer">
-          <div class="brand-id">${brandIdMarkup(brand)}</div>
-          <span class="swipe"><span class="swipe-label">Desliza</span><span class="arrow">→</span></span>
-        </div>`;
+      return `${bg}${scrim}<div class="block">${dividerMarkup(brand)}${heading}</div>${swipe}`;
     }
-
     if (slide.type === 'closing') {
-      const chips = (slide.cta || '')
-        .split('·')
-        .map((c) => c.trim())
-        .filter(Boolean)
-        .map((c) => `<span class="chip">${escapeHtml(c)}</span>`)
-        .join('');
-      return `
-        ${bannerMarkup(slide)}
-        <div class="inner">
-          ${kicker}
-          ${heading}
-          ${body}
-          ${chips ? `<div class="chips">${chips}</div>` : ''}
-        </div>
-        <div class="footer">
-          <div class="brand-id">${brandIdMarkup(brand)}</div>
-          <span class="handle">${escapeHtml(brand.handle)}</span>
-        </div>`;
+      return `${bg}${scrim}<div class="block">${heading}${body}</div>`;
     }
-
     // content
-    const idx = slide.showIndex
-      ? `<span class="index-badge">${String(info.index).padStart(2, '0')}/${String(info.total).padStart(2, '0')}</span>`
-      : `<span class="index-badge"></span>`;
-    return `
-      <div class="top-row">
-        ${idx}
-        <div class="brand-id">${brandIdMarkup(brand)}</div>
-      </div>
-      <div class="inner">
-        ${kicker}
-        ${heading}
-        ${body}
-      </div>
-      <div class="footer">
-        <span class="handle">${escapeHtml(brand.handle)}</span>
-      </div>`;
+    return `${bg}${scrim}<div class="block">${heading}${body}</div>${swipe}`;
   }
 
-  function renderInto(el, slide, brand, info) {
+  function renderInto(el, slide, brand) {
     el.dataset.type = slide.type;
-    applyBrandVars(el, brand, slide);
-    el.innerHTML = slideMarkup(slide, brand, info);
+    applyBrandVars(el, brand);
+    el.innerHTML = slideMarkup(slide, brand);
   }
 
   /* ----------------------------- Render principal ----------------------------- */
   const stage = document.getElementById('stage');
-  const stageScaler = document.getElementById('stage-scaler');
   const filmList = document.getElementById('filmstrip-list');
 
   function render() {
@@ -205,9 +140,7 @@
     document.getElementById('slide-empty').hidden = true;
     document.getElementById('slide-editor').hidden = false;
 
-    const slide = state.slides[state.current];
-    renderInto(stage, slide, state.brand, { index: state.current + 1, total });
-
+    renderInto(stage, state.slides[state.current], state.brand);
     document.getElementById('nav-indicator').textContent = `${state.current + 1} / ${total}`;
 
     renderThumbs();
@@ -216,7 +149,6 @@
   }
 
   function renderThumbs() {
-    const total = state.slides.length;
     filmList.innerHTML = '';
     state.slides.forEach((slide, i) => {
       const thumb = document.createElement('div');
@@ -230,19 +162,15 @@
       const mini = thumb.querySelector('.slide');
       mini.style.width = W + 'px';
       mini.style.height = H + 'px';
-      renderInto(mini, slide, state.brand, { index: i + 1, total });
+      renderInto(mini, slide, state.brand);
 
-      // escalar al ancho real del thumb
       const scale = thumb.clientWidth / W;
       const scaler = thumb.querySelector('.thumb-scaler');
       scaler.style.transform = `scale(${scale})`;
       scaler.style.width = W + 'px';
       scaler.style.height = H + 'px';
 
-      thumb.addEventListener('click', () => {
-        state.current = i;
-        render();
-      });
+      thumb.addEventListener('click', () => { state.current = i; render(); });
     });
   }
 
@@ -261,19 +189,14 @@
   const F = {
     type: document.getElementById('f-type'),
     image: document.getElementById('f-image'),
-    bannerHeight: document.getElementById('f-banner-height'),
-    bannerPos: document.getElementById('f-banner-pos'),
-    kicker: document.getElementById('f-kicker'),
     heading: document.getElementById('f-heading'),
     body: document.getElementById('f-body'),
-    cta: document.getElementById('f-cta'),
-    showIndex: document.getElementById('f-show-index'),
+    swipe: document.getElementById('f-swipe'),
   };
 
   function updateFieldVisibility(type) {
     document.querySelectorAll('[data-show]').forEach((el) => {
       const types = el.getAttribute('data-show').split(' ');
-      // .field y sus variantes son flex; usar 'flex' (no '') para no recaer en la regla CSS que las oculta
       el.style.display = types.includes(type) ? 'flex' : 'none';
     });
   }
@@ -282,19 +205,12 @@
     const s = state.slides[state.current];
     if (!s) return;
     F.type.value = s.type;
-    F.kicker.value = s.kicker || '';
     F.heading.value = s.heading || '';
     F.body.value = s.body || '';
-    F.cta.value = s.cta || '';
-    F.bannerHeight.value = s.bannerHeight;
-    F.bannerPos.value = s.bannerPos;
-    F.showIndex.checked = !!s.showIndex;
-
-    const clearBtn = document.getElementById('btn-clear-image');
-    clearBtn.hidden = !s.image;
-
-    // etiquetas contextuales
-    document.getElementById('heading-label').textContent = s.type === 'cover' ? 'Titular (hook)' : 'Titular';
+    F.swipe.checked = !!s.swipe;
+    document.getElementById('btn-clear-image').hidden = !s.image;
+    document.getElementById('heading-label').textContent =
+      s.type === 'cover' ? 'Título de portada' : s.type === 'closing' ? 'Llamada a la acción' : 'Titular';
     updateFieldVisibility(s.type);
   }
 
@@ -307,13 +223,9 @@
   }
 
   F.type.addEventListener('change', () => patch('type', F.type.value));
-  F.kicker.addEventListener('input', () => patch('kicker', F.kicker.value));
   F.heading.addEventListener('input', () => patch('heading', F.heading.value));
   F.body.addEventListener('input', () => patch('body', F.body.value));
-  F.cta.addEventListener('input', () => patch('cta', F.cta.value));
-  F.bannerHeight.addEventListener('input', () => patch('bannerHeight', +F.bannerHeight.value));
-  F.bannerPos.addEventListener('input', () => patch('bannerPos', +F.bannerPos.value));
-  F.showIndex.addEventListener('change', () => patch('showIndex', F.showIndex.checked));
+  F.swipe.addEventListener('change', () => patch('swipe', F.swipe.checked));
 
   document.getElementById('btn-pick-image').addEventListener('click', () => F.image.click());
   F.image.addEventListener('change', () => {
@@ -375,50 +287,45 @@
     name: document.getElementById('b-name'),
     handle: document.getElementById('b-handle'),
     logo: document.getElementById('b-logo'),
-    bgDeep: document.getElementById('b-bg-deep'),
-    bgMid: document.getElementById('b-bg-mid'),
     accent: document.getElementById('b-accent'),
-    accent2: document.getElementById('b-accent2'),
-    text: document.getElementById('b-text'),
-    muted: document.getElementById('b-muted'),
+    bg: document.getElementById('b-bg'),
     fontDisplay: document.getElementById('b-font-display'),
     fontBody: document.getElementById('b-font-body'),
-    starfield: document.getElementById('b-starfield'),
   };
 
   function syncBrandPanel() {
     B.name.value = state.brand.name;
     B.handle.value = state.brand.handle;
-    B.bgDeep.value = state.brand.bgDeep;
-    B.bgMid.value = state.brand.bgMid;
     B.accent.value = state.brand.accent;
-    B.accent2.value = state.brand.accent2;
-    B.text.value = state.brand.text;
-    B.muted.value = state.brand.muted;
+    B.bg.value = state.brand.bg;
     B.fontDisplay.value = state.brand.fontDisplay;
     B.fontBody.value = state.brand.fontBody;
-    B.starfield.checked = state.brand.starfield;
     document.getElementById('btn-clear-logo').hidden = !state.brand.logo;
   }
 
   function bindBrand(key, input, ev = 'input') {
     input.addEventListener(ev, () => {
-      state.brand[key] = input.type === 'checkbox' ? input.checked : input.value;
+      state.brand[key] = input.value;
       render();
       persist();
     });
   }
   bindBrand('name', B.name);
   bindBrand('handle', B.handle);
-  bindBrand('bgDeep', B.bgDeep);
-  bindBrand('bgMid', B.bgMid);
   bindBrand('accent', B.accent);
-  bindBrand('accent2', B.accent2);
-  bindBrand('text', B.text);
-  bindBrand('muted', B.muted);
+  bindBrand('bg', B.bg);
   bindBrand('fontDisplay', B.fontDisplay, 'change');
   bindBrand('fontBody', B.fontBody, 'change');
-  bindBrand('starfield', B.starfield, 'change');
+
+  // presets de color de acento
+  document.querySelectorAll('.preset[data-accent]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.brand.accent = btn.getAttribute('data-accent');
+      B.accent.value = state.brand.accent;
+      render();
+      persist();
+    });
+  });
 
   document.getElementById('btn-pick-logo').addEventListener('click', () => B.logo.click());
   B.logo.addEventListener('change', () => {
@@ -433,10 +340,7 @@
     state.brand.logo = null; render(); persist(); syncBrandPanel();
   });
 
-  document.getElementById('btn-save-brand').addEventListener('click', () => {
-    persist();
-    flash('Marca guardada ✓');
-  });
+  document.getElementById('btn-save-brand').addEventListener('click', () => { persist(); flash('Marca guardada ✓'); });
   document.getElementById('btn-load-demo').addEventListener('click', () => {
     if (state.slides.length && !confirm('Esto reemplazará el carrusel actual por el demo. ¿Continuar?')) return;
     state.slides = demoCarousel();
@@ -458,21 +362,20 @@
   /* ----------------------------- Exportar PNG ----------------------------- */
   const sandbox = document.getElementById('export-sandbox');
 
-  async function renderSlideToCanvas(slide, info) {
+  async function renderSlideToCanvas(slide) {
     const el = document.createElement('div');
     el.className = 'slide';
     el.style.width = W + 'px';
     el.style.height = H + 'px';
-    renderInto(el, slide, state.brand, info);
+    renderInto(el, slide, state.brand);
     sandbox.appendChild(el);
 
-    // esperar a que las imágenes de fondo carguen
     await waitForImages(el);
 
     const canvas = await html2canvas(el, {
       width: W, height: H, scale: 1,
       backgroundColor: null, useCORS: true, logging: false,
-      imageTimeout: 4000, // evita que un recurso lento (p. ej. una fuente) cuelgue la exportación
+      imageTimeout: 4000,
     });
     sandbox.removeChild(el);
     return canvas;
@@ -481,7 +384,7 @@
   function waitForImages(el) {
     const urls = [];
     el.querySelectorAll('img').forEach((img) => urls.push(img.src));
-    el.querySelectorAll('.banner').forEach((b) => {
+    el.querySelectorAll('.bg').forEach((b) => {
       const m = /url\(["']?(.*?)["']?\)/.exec(b.style.backgroundImage);
       if (m) urls.push(m[1]);
     });
@@ -513,8 +416,7 @@
   document.getElementById('btn-export-current').addEventListener('click', async () => {
     if (!state.slides.length) return;
     flash('Generando PNG…');
-    const total = state.slides.length;
-    const canvas = await renderSlideToCanvas(state.slides[state.current], { index: state.current + 1, total });
+    const canvas = await renderSlideToCanvas(state.slides[state.current]);
     canvas.toBlob((blob) => {
       downloadBlob(blob, `sophion-slide-${String(state.current + 1).padStart(2, '0')}.png`);
       flash('PNG listo ✓');
@@ -529,7 +431,7 @@
     const zip = new JSZip();
     for (let i = 0; i < total; i++) {
       flash(`Generando ${i + 1}/${total}…`);
-      const canvas = await renderSlideToCanvas(state.slides[i], { index: i + 1, total });
+      const canvas = await renderSlideToCanvas(state.slides[i]);
       const dataURL = canvas.toDataURL('image/png');
       zip.file(`sophion-slide-${String(i + 1).padStart(2, '0')}.png`, dataURLtoBlob(dataURL));
     }
@@ -545,7 +447,7 @@
   function flash(msg) {
     if (!toastEl) {
       toastEl = document.createElement('div');
-      toastEl.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2c;border:1px solid #7c5cff;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;z-index:99;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:opacity .3s;';
+      toastEl.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#14100a;border:1px solid #e7c46a;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;z-index:99;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:opacity .3s;';
       document.body.appendChild(toastEl);
     }
     toastEl.textContent = msg;
@@ -575,29 +477,20 @@
   function demoCarousel() {
     return [
       Object.assign(newSlide('cover'), {
-        kicker: 'NEUROCIENCIA',
-        heading: 'TU CEREBRO NO ESTÁ ROTO, ESTÁ DESREGULADO',
-        body: '5 formas de devolverle la calma a tu sistema nervioso',
+        heading: 'La *psicología* de la calma:\ncómo regular tu *sistema nervioso*',
       }),
       Object.assign(newSlide('content'), {
-        kicker: 'EL PROBLEMA',
-        heading: 'Vives en modo supervivencia',
-        body: 'Cuando el nervio vago se comprime, tu cuerpo interpreta la calma como una amenaza. No es falta de voluntad: es fisiología.',
+        heading: 'Vives en modo\n*supervivencia*',
+        body: 'Cuando el sistema nervioso se desregula, tu cuerpo interpreta la calma como una amenaza. No es falta de voluntad: es fisiología.',
       }),
       Object.assign(newSlide('content'), {
-        kicker: 'CLAVE 01',
-        heading: 'Respira por el diafragma',
+        heading: 'Respira *lento*\npara volver a tu eje',
         body: 'Inhala 4s, exhala 6s. La exhalación larga activa el sistema parasimpático y le avisa al cerebro que estás a salvo.',
       }),
-      Object.assign(newSlide('content'), {
-        heading: 'La conciencia es el primer paso de cualquier cambio',
-        body: 'Ningún patrón puede transformarse mientras permanece invisible.',
-      }),
       Object.assign(newSlide('closing'), {
-        kicker: 'TU TURNO',
-        heading: 'Guarda esto para tu próxima crisis',
-        body: 'Y compártelo con quien necesite leerlo hoy.',
-        cta: 'Sigue · Comenta · Guarda · Comparte',
+        heading: '*Síguenos* para entrenar\ntu *calma*',
+        body: 'Y guarda esto para tu próxima tormenta.',
+        swipe: false,
       }),
     ];
   }

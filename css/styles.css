@@ -1,7 +1,7 @@
 /* ======================================================================
    SOPHION · Generador de Carruseles
    - UI de la aplicación
-   - Layouts de slide a 1080 x 1350 px (se escalan con --preview-scale)
+   - Layout de slide "image-forward" a 1080 x 1350 px (se escala con --preview-scale)
    - Sin color-mix(): los colores derivados llegan como rgba desde app.js
      (compatibilidad con html2canvas para exportar PNG)
    ====================================================================== */
@@ -13,8 +13,8 @@
   --app-border: #262640;
   --app-text: #e9e9f5;
   --app-muted: #8d8db0;
-  --app-accent: #7c5cff;
-  --app-accent-2: #3de0ff;
+  --app-accent: #d9b45f;
+  --app-accent-2: #f0d488;
   --radius: 12px;
   --preview-scale: 0.42;
 }
@@ -78,7 +78,7 @@ body {
   transition: border-color .15s, transform .15s;
 }
 .thumb:hover { transform: translateY(-2px); }
-.thumb.is-active { border-color: var(--app-accent); box-shadow: 0 0 0 3px rgba(124,92,255,.25); }
+.thumb.is-active { border-color: var(--app-accent); box-shadow: 0 0 0 3px rgba(217,180,95,.28); }
 .thumb .thumb-scaler { transform-origin: top left; pointer-events: none; }
 .thumb .thumb-index {
   position: absolute; top: 6px; left: 6px; z-index: 3;
@@ -86,8 +86,8 @@ body {
 }
 .thumb .thumb-type {
   position: absolute; bottom: 6px; right: 6px; z-index: 3;
-  background: rgba(124,92,255,.85); color: #fff; font-size: 10px; padding: 2px 7px;
-  border-radius: 20px; text-transform: uppercase; letter-spacing: .5px;
+  background: rgba(217,180,95,.9); color: #14100a; font-size: 10px; padding: 2px 7px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700;
 }
 .add-buttons { padding: 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--app-border); }
 
@@ -111,6 +111,7 @@ body {
 
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field > span { font-size: 12px; color: var(--app-muted); text-transform: uppercase; letter-spacing: .5px; }
+.field-hint { font-size: 12px; color: var(--app-muted); font-style: normal; opacity: .85; line-height: 1.4; }
 .field input[type="text"], .field textarea, .field select {
   background: var(--app-panel-2); border: 1px solid var(--app-border); color: var(--app-text);
   border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 14px; resize: vertical;
@@ -120,13 +121,14 @@ body {
 
 .switch-row { flex-direction: row; align-items: center; gap: 10px; }
 .switch-row span { text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--app-text); }
-.range-row { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; font-size: 12px; color: var(--app-muted); }
-.range-row input { width: 100%; }
 .banner-uploader { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-.color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-.color-field { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--app-panel-2); border: 1px solid var(--app-border); border-radius: 8px; padding: 6px 10px; font-size: 12px; }
-.color-field input[type="color"] { width: 34px; height: 28px; border: none; background: none; cursor: pointer; }
+.preset-row { display: flex; gap: 8px; align-items: center; }
+.preset { display: flex; align-items: center; gap: 8px; }
+.preset::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--sw); box-shadow: 0 0 8px var(--sw); }
+.preset-row input[type="color"] { width: 44px; height: 36px; border: 1px solid var(--app-border); background: none; cursor: pointer; border-radius: 8px; padding: 2px; }
+input[type="color"] { width: 100%; height: 40px; border: 1px solid var(--app-border); background: none; cursor: pointer; border-radius: 8px; padding: 2px; }
+
 .brand-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .empty-state { color: var(--app-muted); font-size: 14px; text-align: center; padding: 30px 10px; }
 
@@ -134,8 +136,8 @@ body {
 .btn { font-family: inherit; font-size: 13px; cursor: pointer; border-radius: 8px; padding: 9px 14px; border: 1px solid var(--app-border); background: var(--app-panel-2); color: var(--app-text); transition: .15s; }
 .btn:hover { border-color: var(--app-accent); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn-primary { background: linear-gradient(135deg, var(--app-accent), #5a3ff0); border-color: transparent; font-weight: 600; }
-.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary { background: linear-gradient(135deg, var(--app-accent), #b8933f); border-color: transparent; color: #14100a; font-weight: 700; }
+.btn-primary:hover { filter: brightness(1.08); }
 .btn-ghost { background: transparent; }
 .btn-add { text-align: left; }
 .btn-nav { padding: 7px 12px; }
@@ -143,163 +145,91 @@ body {
 .btn-upload { background: linear-gradient(135deg, #2a2a45, #1c1c30); }
 
 /* ======================================================================
-   SLIDE  (canvas real 1080 x 1350, layout flexbox)
-   Variables de marca + derivados rgba inyectados por JS en el elemento .slide
+   SLIDE  (canvas real 1080 x 1350) — estilo "image-forward" tipo neuroglobe
+   Imagen a sangre completa + degradado + texto abajo + logo (barritas) en portada
+   Variables de marca inyectadas por JS en el elemento .slide
    ====================================================================== */
 .slide {
-  --bg-deep: #05060f;
-  --bg-mid: #160b33;
-  --accent: #7c5cff;
-  --accent2: #3de0ff;
-  --text: #ffffff;
-  --muted: #b9b6d8;
-  --font-display: 'Space Grotesk';
+  --accent: #e7c46a;
+  --ink: #ffffff;
+  --bg: #05070f;
+  --font-display: 'Archivo';
   --font-body: 'Inter';
-  --banner-h: 48%;
-  --banner-pos: 50%;
-  /* derivados (rellenados por JS; estos son defaults de respaldo) */
-  --glow-accent: rgba(124,92,255,.28);
-  --glow-accent2: rgba(61,224,255,.20);
-  --fade-deep: rgba(5,6,15,.92);
-  --kicker-border: rgba(61,224,255,.45);
-  --kicker-bg: rgba(61,224,255,.10);
-  --chip-border: rgba(124,92,255,.55);
-  --chip-bg: rgba(124,92,255,.16);
+  --glow: rgba(231,196,106,.55);
 
   position: relative;
   width: 1080px;
   height: 1350px;
   overflow: hidden;
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  background:
-    radial-gradient(140% 90% at 50% -10%, var(--glow-accent), transparent 60%),
-    radial-gradient(120% 80% at 110% 110%, var(--glow-accent2), transparent 55%),
-    linear-gradient(160deg, var(--bg-mid), var(--bg-deep) 70%);
+  color: var(--ink);
+  background: var(--bg);
   font-family: var(--font-body), sans-serif;
 }
 
-/* Campo de estrellas */
-.slide.has-stars::before {
-  content: ""; position: absolute; inset: 0; z-index: 0; opacity: .9; pointer-events: none;
-  background-image:
-    radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 27% 64%, #fff, transparent),
-    radial-gradient(2px 2px at 43% 32%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 58% 78%, #fff, transparent),
-    radial-gradient(1px 1px at 68% 12%, #fff, transparent),
-    radial-gradient(2px 2px at 79% 52%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 88% 84%, #fff, transparent),
-    radial-gradient(1px 1px at 92% 26%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 8% 88%, #fff, transparent),
-    radial-gradient(1px 1px at 36% 92%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 51% 8%, #fff, transparent),
-    radial-gradient(1px 1px at 19% 42%, #fff, transparent);
-  background-repeat: no-repeat;
+/* Imagen de fondo a sangre completa */
+.slide .bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-color: var(--bg);
+  background-size: cover; background-position: center; background-repeat: no-repeat;
 }
-
-/* Banner de imagen (portada y cierre) — hijo flex en la parte superior */
-.slide .banner {
-  position: relative; z-index: 1;
-  flex: 0 0 var(--banner-h);
-  width: 100%;
-  background-color: #000;
-  background-size: cover;
-  background-position: center var(--banner-pos);
-  background-repeat: no-repeat;
-}
-.slide .banner::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 55%, var(--fade-deep));
-}
-.slide .banner.is-empty {
+.slide .bg.is-empty {
   display: flex; align-items: center; justify-content: center;
-  background: repeating-linear-gradient(45deg, #15162b, #15162b 22px, #1b1c36 22px, #1b1c36 44px);
+  background: repeating-linear-gradient(45deg, #0b0f1c, #0b0f1c 24px, #0e1526 24px, #0e1526 48px);
 }
-.slide .banner.is-empty::before {
-  content: "Sube tu imagen banner (hook visual)";
-  position: relative; z-index: 1; color: #6f6f96; font-size: 30px; letter-spacing: 1px;
-}
-
-/* Bloque central */
-.slide .inner {
-  position: relative; z-index: 2;
-  flex: 1 1 auto; min-height: 0;
-  display: flex; flex-direction: column;
-  padding: 56px 80px 24px;
+.slide .bg.is-empty::after {
+  content: "Sube tu imagen"; color: #5b6480; font-size: 34px; letter-spacing: 2px;
 }
 
-/* Cabecera (solo contenido) */
-.slide .top-row {
-  position: relative; z-index: 2;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 70px 80px 0;
+/* Degradado para legibilidad del texto */
+.slide .scrim {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg,
+    rgba(3,5,10,.20) 0%, rgba(3,5,10,0) 30%,
+    rgba(3,5,10,.60) 58%, rgba(3,5,10,.96) 100%);
+}
+.slide[data-type="closing"] .scrim {
+  background: linear-gradient(180deg,
+    rgba(3,5,10,.55) 0%, rgba(3,5,10,.35) 42%, rgba(3,5,10,.93) 100%);
 }
 
-/* Pie */
-.slide .footer {
-  position: relative; z-index: 2;
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-  padding: 16px 80px 70px;
+/* Bloque de texto */
+.slide .block { position: absolute; left: 76px; right: 76px; z-index: 2; text-align: left; }
+.slide[data-type="cover"] .block { bottom: 172px; }
+.slide[data-type="content"] .block { bottom: 150px; }
+.slide[data-type="closing"] .block { top: 50%; transform: translateY(-50%); text-align: center; }
+
+/* Divisor con logo (barrita — logo — barrita), solo portada */
+.slide .divider { display: flex; align-items: center; gap: 28px; margin-bottom: 32px; }
+.slide .divider .ln { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.6)); }
+.slide .divider .ln:last-child { background: linear-gradient(90deg, rgba(255,255,255,.6), rgba(255,255,255,0)); }
+.slide .divider .mark { color: var(--accent); font-size: 34px; line-height: 1; text-shadow: 0 0 18px var(--glow); }
+.slide .divider img { height: 118px; width: auto; max-width: 300px; object-fit: contain; }
+
+/* Titular */
+.slide .hl {
+  font-family: var(--font-display), sans-serif; font-weight: 900; text-transform: uppercase;
+  line-height: 1.0; letter-spacing: -0.01em; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: break-word;
+}
+.slide .hl .k { color: var(--accent); }
+.slide[data-type="cover"] .hl { font-size: 82px; }
+.slide[data-type="content"] .hl { font-size: 80px; }
+.slide[data-type="closing"] .hl { font-size: 86px; text-align: center; }
+
+/* Cuerpo */
+.slide .body {
+  font-family: var(--font-body), sans-serif; font-weight: 600; text-transform: uppercase;
+  font-size: 27px; line-height: 1.42; letter-spacing: .004em;
+  color: rgba(255,255,255,.9); text-align: center; margin-top: 28px;
+  white-space: pre-wrap; overflow-wrap: break-word;
 }
 
-/* Tipografías y elementos */
-.slide .kicker {
-  display: inline-block; align-self: flex-start;
-  font-family: var(--font-body);
-  font-size: 28px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
-  color: var(--accent2);
-  padding: 14px 26px; border-radius: 100px;
-  border: 2px solid var(--kicker-border);
-  background: var(--kicker-bg);
-  margin-bottom: 26px;
-  line-height: 1; white-space: nowrap;
+/* "DESLIZA" */
+.slide .swipe {
+  position: absolute; bottom: 56px; left: 0; right: 0; z-index: 3; text-align: center;
+  font-family: var(--font-body), sans-serif; font-weight: 600; font-size: 22px;
+  letter-spacing: .34em; color: rgba(255,255,255,.62);
 }
-.slide .kicker .kdot {
-  display: inline-block; width: 14px; height: 14px; border-radius: 50%;
-  background: var(--accent2); box-shadow: 0 0 16px var(--accent2);
-  margin-right: 14px; vertical-align: middle; position: relative; top: -2px;
-}
-
-.slide .heading {
-  font-family: var(--font-display); font-weight: 700; line-height: 1.04; letter-spacing: -.5px;
-  text-transform: uppercase; white-space: pre-wrap; overflow-wrap: break-word;
-}
-.slide .body { font-family: var(--font-body); color: var(--muted); line-height: 1.45; font-weight: 400; white-space: pre-wrap; overflow-wrap: break-word; }
-
-.slide .brand-id { display: flex; align-items: center; gap: 16px; }
-.slide .brand-id img { height: 56px; width: auto; object-fit: contain; }
-.slide .brand-id .name { font-family: var(--font-display); font-weight: 700; letter-spacing: 3px; font-size: 34px; }
-.slide .handle { font-family: var(--font-body); color: var(--muted); font-size: 30px; }
-
-.slide .swipe { display: inline-flex; align-items: center; gap: 14px; font-family: var(--font-display); font-weight: 600; font-size: 32px; color: var(--accent2); }
-.slide .swipe .arrow { font-size: 40px; }
-
-.slide .index-badge { font-family: var(--font-display); font-weight: 700; font-size: 30px; color: var(--accent2); letter-spacing: 2px; }
-
-.slide .chips { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px; }
-.slide .chips .chip {
-  font-family: var(--font-display); font-weight: 600; font-size: 30px;
-  padding: 14px 26px; border-radius: 100px; color: var(--text);
-  border: 2px solid var(--chip-border); background: var(--chip-bg);
-}
-
-/* ---------- Variantes por tipo ---------- */
-/* PORTADA */
-.slide[data-type="cover"] .inner { justify-content: flex-end; }
-.slide[data-type="cover"] .heading { font-size: 90px; margin-bottom: 30px; }
-.slide[data-type="cover"] .body { font-size: 36px; }
-
-/* CONTENIDO */
-.slide[data-type="content"] .inner { justify-content: center; }
-.slide[data-type="content"] .heading { font-size: 64px; margin-bottom: 32px; }
-.slide[data-type="content"] .body { font-size: 40px; }
-
-/* CIERRE */
-.slide[data-type="closing"] .inner { justify-content: flex-end; }
-.slide[data-type="closing"] .heading { font-size: 66px; margin-bottom: 26px; }
-.slide[data-type="closing"] .body { font-size: 38px; margin-bottom: 8px; }
 
 /* ----------------------------- Sandbox de exportación (fuera de pantalla) ----------------------------- */
 #export-sandbox { position: fixed; left: -100000px; top: 0; width: 1080px; height: 0; overflow: visible; pointer-events: none; }

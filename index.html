@@ -7,7 +7,6 @@
 
   <!-- Tipografías autoalojadas (funcionan offline; exportación rápida y fiable) -->
   <link rel="stylesheet" href="assets/fonts/fonts.css" />
-
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -37,7 +36,7 @@
       <div class="add-buttons">
         <button class="btn btn-add" data-add="cover">+ Portada</button>
         <button class="btn btn-add" data-add="content">+ Contenido</button>
-        <button class="btn btn-add" data-add="closing">+ Cierre</button>
+        <button class="btn btn-add" data-add="closing">+ Cierre / CTA</button>
       </div>
     </aside>
 
@@ -79,38 +78,26 @@
           <label class="field" data-show="cover content closing">
             <span>Tipo de slide</span>
             <select id="f-type">
-              <option value="cover">Portada (con banner)</option>
+              <option value="cover">Portada (logo + título)</option>
               <option value="content">Contenido</option>
-              <option value="closing">Cierre (con banner)</option>
+              <option value="closing">Cierre / CTA (centrado)</option>
             </select>
           </label>
 
-          <!-- Banner PNG: solo portada y cierre -->
-          <div class="field banner-field" data-show="cover closing">
-            <span>Imagen banner (PNG/JPG) — el hook visual</span>
+          <!-- Imagen a sangre completa (todos los slides) -->
+          <div class="field" data-show="cover content closing">
+            <span>Imagen (a sangre completa) — la generas y la subes tú</span>
             <div class="banner-uploader">
               <input type="file" id="f-image" accept="image/*" hidden />
               <button class="btn btn-upload" id="btn-pick-image">📷 Subir imagen</button>
               <button class="btn btn-ghost btn-clear-image" id="btn-clear-image" hidden>Quitar</button>
             </div>
-            <label class="range-row">
-              <span>Altura del banner</span>
-              <input type="range" id="f-banner-height" min="30" max="62" value="48" />
-            </label>
-            <label class="range-row">
-              <span>Posición vertical de la imagen</span>
-              <input type="range" id="f-banner-pos" min="0" max="100" value="50" />
-            </label>
           </div>
-
-          <label class="field" data-show="cover content closing">
-            <span id="kicker-label">Etiqueta / kicker</span>
-            <input type="text" id="f-kicker" placeholder="NEUROCIENCIA" />
-          </label>
 
           <label class="field" data-show="cover content closing">
             <span id="heading-label">Titular</span>
             <textarea id="f-heading" rows="3" placeholder="Tu frase con gancho"></textarea>
+            <em class="field-hint">Rodea con *asteriscos* las palabras a resaltar en color. Ej: la *calma* se entrena.</em>
           </label>
 
           <label class="field" data-show="content closing">
@@ -118,31 +105,17 @@
             <textarea id="f-body" rows="5" placeholder="Desarrolla la idea aquí..."></textarea>
           </label>
 
-          <label class="field" data-show="closing">
-            <span>Llamada a la acción (chips)</span>
-            <input type="text" id="f-cta" placeholder="Sigue · Comenta · Guarda · Comparte" />
-          </label>
-
-          <label class="field switch-row" data-show="content">
-            <input type="checkbox" id="f-show-index" checked />
-            <span>Mostrar número de slide</span>
+          <label class="field switch-row" data-show="cover content">
+            <input type="checkbox" id="f-swipe" checked />
+            <span>Mostrar "DESLIZA" abajo</span>
           </label>
         </div>
       </div>
 
       <!-- ---- Tab: marca ---- -->
       <div class="tab-panel" data-panel="brand" id="panel-brand">
-        <label class="field">
-          <span>Nombre de marca</span>
-          <input type="text" id="b-name" value="SOPHION" />
-        </label>
-        <label class="field">
-          <span>Usuario / handle</span>
-          <input type="text" id="b-handle" value="@sophion" />
-        </label>
-
         <div class="field">
-          <span>Logo (PNG transparente recomendado)</span>
+          <span>Logo (PNG transparente recomendado) — va centrado en la portada con las barritas</span>
           <div class="banner-uploader">
             <input type="file" id="b-logo" accept="image/*" hidden />
             <button class="btn btn-upload" id="btn-pick-logo">🖼 Subir logo</button>
@@ -150,24 +123,31 @@
           </div>
         </div>
 
-        <div class="color-grid">
-          <label class="color-field"><span>Fondo profundo</span><input type="color" id="b-bg-deep" value="#05060f" /></label>
-          <label class="color-field"><span>Fondo medio</span><input type="color" id="b-bg-mid" value="#160b33" /></label>
-          <label class="color-field"><span>Acento 1</span><input type="color" id="b-accent" value="#7c5cff" /></label>
-          <label class="color-field"><span>Acento 2</span><input type="color" id="b-accent2" value="#3de0ff" /></label>
-          <label class="color-field"><span>Texto</span><input type="color" id="b-text" value="#ffffff" /></label>
-          <label class="color-field"><span>Texto tenue</span><input type="color" id="b-muted" value="#b9b6d8" /></label>
+        <div class="field">
+          <span>Color de acento (resaltado de palabras y logo)</span>
+          <div class="preset-row">
+            <button class="btn preset" data-accent="#e7c46a" style="--sw:#e7c46a">Dorado</button>
+            <button class="btn preset" data-accent="#37b6ff" style="--sw:#37b6ff">Azul</button>
+            <input type="color" id="b-accent" value="#e7c46a" />
+          </div>
         </div>
+
+        <label class="field">
+          <span>Color de fondo (cuando no hay imagen)</span>
+          <input type="color" id="b-bg" value="#05070f" />
+        </label>
 
         <label class="field">
           <span>Tipografía de titulares</span>
           <select id="b-font-display">
-            <option>Space Grotesk</option>
-            <option>Sora</option>
             <option>Archivo</option>
-            <option>Manrope</option>
-            <option>Poppins</option>
+            <option>Anton</option>
             <option>Bebas Neue</option>
+            <option>Unbounded</option>
+            <option>Bricolage Grotesque</option>
+            <option>Space Grotesk</option>
+            <option>Syne</option>
+            <option>Sora</option>
           </select>
         </label>
         <label class="field">
@@ -175,15 +155,19 @@
           <select id="b-font-body">
             <option>Inter</option>
             <option>Manrope</option>
-            <option>Sora</option>
             <option>Poppins</option>
+            <option>Sora</option>
           </select>
         </label>
 
-        <div class="field switch-row">
-          <input type="checkbox" id="b-starfield" checked />
-          <span>Fondo de estrellas (cósmico)</span>
-        </div>
+        <label class="field">
+          <span>Nombre de marca</span>
+          <input type="text" id="b-name" value="SOPHION" />
+        </label>
+        <label class="field">
+          <span>Usuario / handle</span>
+          <input type="text" id="b-handle" value="@sophion.club" />
+        </label>
 
         <div class="brand-actions">
           <button class="btn btn-ghost" id="btn-save-brand">💾 Guardar marca</button>
