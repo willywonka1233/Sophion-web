@@ -119,7 +119,7 @@
   }
 
   function slideMarkup(slide, brand, info) {
-    const kicker = slide.kicker ? `<span class="kicker"><span class="kdot"></span>${escapeHtml(slide.kicker)}</span>` : '';
+    const kicker = slide.kicker ? `<span class="kicker"><span class="kdot"></span><span class="klabel">${escapeHtml(slide.kicker)}</span></span>` : '';
     const heading = slide.heading ? `<h1 class="heading">${escapeHtml(slide.heading)}</h1>` : '';
     const body = slide.body ? `<p class="body">${escapeHtml(slide.body)}</p>` : '';
 
@@ -133,7 +133,7 @@
         </div>
         <div class="footer">
           <div class="brand-id">${brandIdMarkup(brand)}</div>
-          <span class="swipe">Desliza <span class="arrow">→</span></span>
+          <span class="swipe"><span class="swipe-label">Desliza</span><span class="arrow">→</span></span>
         </div>`;
     }
 
