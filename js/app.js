@@ -10,15 +10,15 @@
   'use strict';
 
   const W = 1080, H = 1350;
-  const STORAGE_KEY = 'sophion_carousel_v2';
+  const STORAGE_KEY = 'sophion_carousel_v3';
   const SWIPE_TEXT = 'DESLIZA';
 
   /* ----------------------------- Estado ----------------------------- */
   const DEFAULT_BRAND = {
     name: 'SOPHION',
     handle: '@sophion.club',
-    logo: null,
-    accent: '#e7c46a',   // dorado de marca
+    logo: 'assets/logo-sophion.png', // escudo Sophion Club precargado (reemplazable)
+    accent: '#efe4ae',   // amarillo suave tirando a blanco
     bg: '#05070f',       // azul noche
     fontDisplay: 'Archivo',
     fontBody: 'Inter',
@@ -107,7 +107,7 @@
       return `${bg}${scrim}<div class="block">${dividerMarkup(brand)}${heading}</div>${swipe}`;
     }
     if (slide.type === 'closing') {
-      return `${bg}${scrim}<div class="block">${heading}${body}</div>`;
+      return `${bg}${scrim}<div class="block">${dividerMarkup(brand)}${heading}${body}</div>`;
     }
     // content
     return `${bg}${scrim}<div class="block">${heading}${body}</div>${swipe}`;

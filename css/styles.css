@@ -150,12 +150,12 @@ input[type="color"] { width: 100%; height: 40px; border: 1px solid var(--app-bor
    Variables de marca inyectadas por JS en el elemento .slide
    ====================================================================== */
 .slide {
-  --accent: #e7c46a;
+  --accent: #efe4ae;
   --ink: #ffffff;
   --bg: #05070f;
   --font-display: 'Archivo';
   --font-body: 'Inter';
-  --glow: rgba(231,196,106,.55);
+  --glow: rgba(239,228,174,.45);
 
   position: relative;
   width: 1080px;
@@ -192,23 +192,26 @@ input[type="color"] { width: 100%; height: 40px; border: 1px solid var(--app-bor
     rgba(3,5,10,.55) 0%, rgba(3,5,10,.35) 42%, rgba(3,5,10,.93) 100%);
 }
 
-/* Bloque de texto */
-.slide .block { position: absolute; left: 76px; right: 76px; z-index: 2; text-align: left; }
-.slide[data-type="cover"] .block { bottom: 172px; }
-.slide[data-type="content"] .block { bottom: 150px; }
-.slide[data-type="closing"] .block { top: 50%; transform: translateY(-50%); text-align: center; }
+/* Bloque de texto (siempre centrado) */
+.slide .block {
+  position: absolute; left: 76px; right: 76px; z-index: 2; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+}
+.slide[data-type="cover"] .block { bottom: 150px; }
+.slide[data-type="content"] .block { bottom: 148px; }
+.slide[data-type="closing"] .block { top: 50%; transform: translateY(-50%); }
 
-/* Divisor con logo (barrita — logo — barrita), solo portada */
-.slide .divider { display: flex; align-items: center; gap: 28px; margin-bottom: 32px; }
-.slide .divider .ln { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.6)); }
-.slide .divider .ln:last-child { background: linear-gradient(90deg, rgba(255,255,255,.6), rgba(255,255,255,0)); }
+/* Divisor con logo (barrita — logo — barrita): portada y cierre */
+.slide .divider { display: flex; align-items: center; gap: 34px; margin-bottom: 30px; width: 100%; }
+.slide .divider .ln { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5)); }
+.slide .divider .ln:last-child { background: linear-gradient(90deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
 .slide .divider .mark { color: var(--accent); font-size: 34px; line-height: 1; text-shadow: 0 0 18px var(--glow); }
-.slide .divider img { height: 118px; width: auto; max-width: 300px; object-fit: contain; }
+.slide .divider img { height: 150px; width: auto; max-width: 340px; object-fit: contain; filter: drop-shadow(0 6px 20px rgba(0,0,0,.55)); }
 
 /* Titular */
 .slide .hl {
   font-family: var(--font-display), sans-serif; font-weight: 900; text-transform: uppercase;
-  line-height: 1.0; letter-spacing: -0.01em; color: var(--ink);
+  line-height: 1.03; letter-spacing: -0.01em; color: var(--ink); text-align: center;
   white-space: pre-wrap; overflow-wrap: break-word;
 }
 .slide .hl .k { color: var(--accent); }
