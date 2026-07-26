@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOPHION · Generador de Carruseles</title>
+
+  <!-- Tipografías autoalojadas (funcionan offline; exportación rápida y fiable) -->
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ====================== BARRA SUPERIOR ====================== -->
+  <header class="topbar">
+    <div class="brandmark">
+      <span class="dot"></span>
+      <strong>SOPHION</strong>
+      <span class="sub">Generador de Carruseles</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button id="btn-export-current" class="btn btn-ghost" title="Exporta el slide visible">⬇︎ PNG actual</button>
+      <button id="btn-export-all" class="btn btn-primary" title="Descarga todos los slides en un .zip">⬇︎ Descargar todo (.zip)</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ====================== FILMSTRIP (lista de slides) ====================== -->
+    <aside class="filmstrip" id="filmstrip">
+      <div class="filmstrip-head">
+        <span>Slides</span>
+        <span class="hint" id="slide-count">0</span>
+      </div>
+      <div class="filmstrip-list" id="filmstrip-list"><!-- miniaturas dinámicas --></div>
+
+      <div class="add-buttons">
+        <button class="btn btn-add" data-add="cover">+ Portada</button>
+        <button class="btn btn-add" data-add="content">+ Contenido</button>
+        <button class="btn btn-add" data-add="closing">+ Cierre / CTA</button>
+      </div>
+    </aside>
+
+    <!-- ====================== LIENZO (preview) ====================== -->
+    <section class="canvas-area">
+      <div class="canvas-toolbar">
+        <button id="nav-prev" class="btn btn-nav">‹</button>
+        <span id="nav-indicator" class="nav-indicator">0 / 0</span>
+        <button id="nav-next" class="btn btn-nav">›</button>
+
+        <span class="spacer"></span>
+
+        <button id="btn-move-up" class="btn btn-nav" title="Mover slide antes">⤴ orden</button>
+        <button id="btn-move-down" class="btn btn-nav" title="Mover slide después">⤵ orden</button>
+        <button id="btn-duplicate" class="btn btn-nav" title="Duplicar slide">⧉</button>
+        <button id="btn-delete" class="btn btn-nav danger" title="Eliminar slide">🗑</button>
+      </div>
+
+      <div class="stage-wrap">
+        <!-- El slide se renderiza SIEMPRE a 1080x1350 px reales y se escala con CSS para el preview -->
+        <div class="stage-scaler" id="stage-scaler">
+          <div class="slide" id="stage" data-type="cover"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== INSPECTOR (editor) ====================== -->
+    <aside class="inspector">
+      <div class="tabs">
+        <button class="tab is-active" data-tab="slide">Slide</button>
+        <button class="tab" data-tab="brand">Marca</button>
+      </div>
+
+      <!-- ---- Tab: edición del slide ---- -->
+      <div class="tab-panel is-active" data-panel="slide" id="panel-slide">
+        <p class="empty-state" id="slide-empty">Añade un slide para empezar a editar.</p>
+
+        <div id="slide-editor" hidden>
+          <label class="field" data-show="cover content closing">
+            <span>Tipo de slide</span>
+            <select id="f-type">
+              <option value="cover">Portada (logo + título)</option>
+              <option value="content">Contenido</option>
+              <option value="closing">Cierre / CTA (centrado)</option>
+            </select>
+          </label>
+
+          <!-- Imagen a sangre completa (todos los slides) -->
+          <div class="field" data-show="cover content closing">
+            <span>Imagen (a sangre completa) — la generas y la subes tú</span>
+            <div class="banner-uploader">
+              <input type="file" id="f-image" accept="image/*" hidden />
+              <button class="btn btn-upload" id="btn-pick-image">📷 Subir imagen</button>
+              <button class="btn btn-ghost btn-clear-image" id="btn-clear-image" hidden>Quitar</button>
+            </div>
+          </div>
+
+          <label class="field" data-show="cover content closing">
+            <span id="heading-label">Titular</span>
+            <textarea id="f-heading" rows="3" placeholder="Tu frase con gancho"></textarea>
+            <em class="field-hint">Rodea con *asteriscos* las palabras a resaltar en color. Ej: la *calma* se entrena.</em>
+          </label>
+
+          <label class="field" data-show="content closing">
+            <span id="body-label">Texto</span>
+            <textarea id="f-body" rows="5" placeholder="Desarrolla la idea aquí..."></textarea>
+          </label>
+
+          <label class="field switch-row" data-show="cover content">
+            <input type="checkbox" id="f-swipe" checked />
+            <span>Mostrar "DESLIZA" abajo</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ---- Tab: marca ---- -->
+      <div class="tab-panel" data-panel="brand" id="panel-brand">
+        <div class="field">
+          <span>Logo (PNG transparente recomendado) — va centrado en la portada con las barritas</span>
+          <div class="banner-uploader">
+            <input type="file" id="b-logo" accept="image/*" hidden />
+            <button class="btn btn-upload" id="btn-pick-logo">🖼 Subir logo</button>
+            <button class="btn btn-ghost" id="btn-clear-logo" hidden>Quitar</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span>Color de acento (resaltado de palabras y logo)</span>
+          <div class="preset-row">
+            <button class="btn preset" data-accent="#efe4ae" style="--sw:#efe4ae">Amarillo suave</button>
+            <button class="btn preset" data-accent="#e7c46a" style="--sw:#e7c46a">Dorado</button>
+            <button class="btn preset" data-accent="#37b6ff" style="--sw:#37b6ff">Azul</button>
+            <input type="color" id="b-accent" value="#efe4ae" />
+          </div>
+        </div>
+
+        <label class="field">
+          <span>Color de fondo (cuando no hay imagen)</span>
+          <input type="color" id="b-bg" value="#05070f" />
+        </label>
+
+        <label class="field">
+          <span>Tipografía de titulares</span>
+          <select id="b-font-display">
+            <option>Archivo</option>
+            <option>Anton</option>
+            <option>Bebas Neue</option>
+            <option>Unbounded</option>
+            <option>Bricolage Grotesque</option>
+            <option>Space Grotesk</option>
+            <option>Syne</option>
+            <option>Sora</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Tipografía de texto</span>
+          <select id="b-font-body">
+            <option>Inter</option>
+            <option>Manrope</option>
+            <option>Poppins</option>
+            <option>Sora</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Nombre de marca</span>
+          <input type="text" id="b-name" value="SOPHION" />
+        </label>
+        <label class="field">
+          <span>Usuario / handle</span>
+          <input type="text" id="b-handle" value="@sophion.club" />
+        </label>
+
+        <div class="brand-actions">
+          <button class="btn btn-ghost" id="btn-save-brand">💾 Guardar marca</button>
+          <button class="btn btn-ghost" id="btn-load-demo">✨ Cargar carrusel demo</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Contenedor oculto para renderizar slides a tamaño completo durante la exportación -->
+  <div id="export-sandbox" aria-hidden="true"></div>
+
+  <!-- Librerías para exportar a PNG / ZIP (incluidas localmente, funcionan offline) -->
+  <script src="js/vendor/html2canvas.min.js"></script>
+  <script src="js/vendor/jszip.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

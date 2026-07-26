@@ -1,0 +1,18 @@
+Tipografías autoalojadas en este proyecto
+==========================================
+
+Las fuentes incluidas en esta carpeta (.woff2) provienen de Google Fonts y
+están licenciadas bajo la SIL Open Font License, Version 1.1 (OFL-1.1):
+https://scripts.sil.org/OFL
+
+Familias incluidas (subset latin):
+- Space Grotesk
+- Sora
+- Inter
+- Manrope
+- Archivo
+- Poppins
+- Bebas Neue
+
+Se autoalojan localmente para que el generador funcione sin conexión y para que
+la exportación a PNG (html2canvas) sea rápida y fiable, sin depender de un CDN.
