@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #04060c; }
+    a { color: #f0b552; } a:hover { color: #ffd98a; }
+  </style>
+</helmet>
+<div style="position:relative; width:1080px; height:1350px; overflow:hidden; background:#04060c; font-family:Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#f4ecdd;">
+
+  <div style="position:absolute; inset:0; background:radial-gradient(112% 78% at 60% 18%, #101b2f 0%, #080d18 46%, #04060c 100%);"></div>
+
+  <svg viewBox="0 0 1080 1350" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+    <defs>
+      <radialGradient id="bok"><stop offset="0" stop-color="#ffc861" stop-opacity=".8"></stop><stop offset="50%" stop-color="#efa130" stop-opacity=".3"></stop><stop offset="100%" stop-color="#efa130" stop-opacity="0"></stop></radialGradient>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    </defs>
+    <g fill="url(#bok)">
+      <circle cx="128" cy="196" r="24"></circle><circle cx="242" cy="96" r="10"></circle><circle cx="66" cy="420" r="14"></circle>
+      <circle cx="318" cy="292" r="6"></circle><circle cx="196" cy="612" r="18"></circle><circle cx="92" cy="742" r="9"></circle>
+      <circle cx="286" cy="880" r="22"></circle><circle cx="146" cy="1046" r="12"></circle><circle cx="62" cy="1190" r="16"></circle>
+      <circle cx="352" cy="1136" r="7"></circle><circle cx="470" cy="1272" r="20"></circle><circle cx="612" cy="1108" r="10"></circle>
+      <circle cx="744" cy="1246" r="15"></circle><circle cx="880" cy="1050" r="8"></circle><circle cx="980" cy="1204" r="22"></circle>
+      <circle cx="1012" cy="860" r="11"></circle><circle cx="906" cy="640" r="17"></circle><circle cx="1020" cy="470" r="9"></circle>
+      <circle cx="812" cy="268" r="20"></circle><circle cx="946" cy="150" r="12"></circle><circle cx="676" cy="120" r="7"></circle>
+      <circle cx="536" cy="230" r="14"></circle>
+    </g>
+    <rect width="1080" height="1350" filter="url(#grain)" opacity=".055"></rect>
+  </svg>
+
+  <svg viewBox="0 0 600 820" style="position:absolute; right:-78px; top:44px; width:790px; height:1080px;">
+    <defs>
+      <filter id="fg" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="9" result="b"></feGaussianBlur>
+        <feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <radialGradient id="core"><stop offset="0" stop-color="#fff3d2"></stop><stop offset="45%" stop-color="#ffc861" stop-opacity=".65"></stop><stop offset="100%" stop-color="#f0a231" stop-opacity="0"></stop></radialGradient>
+    </defs>
+    <circle cx="300" cy="470" r="130" fill="url(#core)" opacity=".8"></circle>
+    <g filter="url(#fg)">
+      <g fill="none" stroke="#f2a93c" stroke-opacity=".26" stroke-width="1.6" stroke-linecap="round">
+        <path d="M300 60 C356 60 392 104 392 172 C392 236 354 288 300 288 C246 288 208 236 208 172 C208 104 244 60 300 60 Z"></path>
+        <path d="M256 280 C256 316 250 336 238 346 C176 372 116 404 92 452 C70 496 62 610 58 820"></path>
+        <path d="M344 280 C344 316 350 336 362 346 C424 372 484 404 508 452 C530 496 538 610 542 820"></path>
+      </g>
+      <g fill="none" stroke="#f6b845" stroke-width="2.1" stroke-linecap="round" stroke-opacity=".92">
+        <path d="M300 196 C300 258 298 300 300 348"></path>
+        <path d="M300 348 C300 432 296 522 300 624"></path>
+        <path d="M300 348 C250 372 210 404 176 452"></path>
+        <path d="M300 348 C350 372 390 404 424 452"></path>
+        <path d="M300 404 C258 428 232 464 214 514"></path>
+        <path d="M300 404 C342 428 368 464 386 514"></path>
+        <path d="M176 452 C140 522 118 620 108 742"></path>
+        <path d="M424 452 C460 522 482 620 492 742"></path>
+      </g>
+      <g fill="none" stroke="#ffd07f" stroke-width="1.2" stroke-linecap="round" stroke-opacity=".7">
+        <path d="M300 196 C272 172 254 146 250 112"></path>
+        <path d="M300 196 C328 172 346 146 350 112"></path>
+        <path d="M300 196 C266 188 238 172 222 148"></path>
+        <path d="M300 196 C334 188 362 172 378 148"></path>
+        <path d="M250 112 l-22 -18 M250 112 l4 -30 M350 112 l22 -18 M350 112 l-4 -30"></path>
+        <path d="M222 148 l-26 -6 M378 148 l26 -6"></path>
+        <path d="M176 452 l-30 24 M176 452 l4 42 M424 452 l30 24 M424 452 l-4 42"></path>
+        <path d="M214 514 l-26 32 M214 514 l18 40 M386 514 l26 32 M386 514 l-18 40"></path>
+        <path d="M300 624 l-34 56 M300 624 l34 56 M300 624 l0 72"></path>
+        <path d="M108 742 l-16 40 M492 742 l16 40"></path>
+        <path d="M300 470 l-64 -42 M300 470 l64 -42 M300 470 l-72 44 M300 470 l72 44 M300 470 l-38 88 M300 470 l38 88"></path>
+      </g>
+      <g fill="#ffe6ae">
+        <circle cx="300" cy="196" r="5"></circle><circle cx="300" cy="348" r="6"></circle><circle cx="176" cy="452" r="4.5"></circle>
+        <circle cx="424" cy="452" r="4.5"></circle><circle cx="214" cy="514" r="4"></circle><circle cx="386" cy="514" r="4"></circle>
+        <circle cx="300" cy="624" r="5"></circle><circle cx="108" cy="742" r="4"></circle><circle cx="492" cy="742" r="4"></circle>
+      </g>
+    </g>
+    <circle cx="300" cy="470" r="7.5" fill="#fff6de"></circle>
+  </svg>
+
+  <svg viewBox="0 0 460 460" style="position:absolute; left:-108px; top:206px; width:470px; height:470px;">
+    <g fill="none" stroke="#f2a93c" stroke-linecap="round">
+      <circle cx="230" cy="230" r="204" stroke-width="1.4" stroke-opacity=".5"></circle>
+      <circle cx="230" cy="230" r="168" stroke-width="1" stroke-opacity=".3" stroke-dasharray="2 10"></circle>
+      <circle cx="230" cy="230" r="126" stroke-width="1.2" stroke-opacity=".4"></circle>
+      <path d="M230 26 v24 M434 230 h-24 M230 434 v-24 M26 230 h24" stroke-width="1.6" stroke-opacity=".65"></path>
+    </g>
+  </svg>
+
+  <svg viewBox="0 0 760 130" style="position:absolute; left:-52px; top:392px; width:760px; height:130px;">
+    <defs>
+      <filter id="fg2" x="-30%" y="-120%" width="160%" height="340%">
+        <feGaussianBlur stdDeviation="5" result="b2"></feGaussianBlur>
+        <feMerge><feMergeNode in="b2"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+    </defs>
+    <path d="M0 76 H124 l12 -36 l9 70 l11 -48 l9 24 H300 l14 -44 l8 62 l10 -40 l8 22 H494 l16 -30 l7 48 l9 -32 l7 18 H760"
+          fill="none" stroke="#ffca6d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".85" filter="url(#fg2)"></path>
+  </svg>
+
+  <div style="position:absolute; inset:0; background:radial-gradient(80% 62% at 52% 42%, rgba(0,0,0,0) 42%, rgba(0,0,0,.5) 100%);"></div>
+  <div style="position:absolute; left:0; right:0; bottom:0; height:760px; background:linear-gradient(to top, #04060c 0%, rgba(4,6,12,.96) 24%, rgba(4,6,12,.72) 52%, rgba(4,6,12,0) 100%);"></div>
+
+  <div style="position:absolute; left:96px; top:88px; display:flex; align-items:baseline; gap:14px;">
+    <span style="font-size:26px; font-weight:700; letter-spacing:.34em; text-transform:uppercase; color:#f7efe0;">Sophion</span>
+    <span style="font-size:26px; font-weight:400; letter-spacing:.34em; text-transform:uppercase; color:rgba(244,236,221,.5);">Club</span>
+  </div>
+
+  <div style="position:absolute; left:96px; right:96px; bottom:186px; display:flex; flex-direction:column; gap:34px;">
+    <div style="display:flex; align-items:center; gap:22px;">
+      <span style="display:block; width:56px; height:1px; background:#f2a93c;"></span>
+      <span style="font-size:22px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:#f2a93c;">Sistema nervioso</span>
+    </div>
+    <h1 style="margin:0; font-family:'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-weight:600; font-size:108px; line-height:0.98; letter-spacing:-0.01em; color:#f7efe0; text-wrap:balance;">
+      El nervio vago:<br>el <em style="font-style:italic; color:#f8c168;">interruptor</em><br>de tu calma
+    </h1>
+    <p style="margin:0; max-width:660px; font-size:31px; line-height:1.5; color:rgba(244,236,221,.72); text-wrap:pretty;">
+      El 80&nbsp;% de sus señales suben del cuerpo al cerebro, no al revés. Así se entrena.
+    </p>
+  </div>
+
+  <div style="position:absolute; left:96px; right:96px; bottom:76px; display:flex; justify-content:space-between; align-items:center; font-size:22px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,221,.42);">
+    <span>@sophionclub</span>
+    <span style="display:flex; align-items:center; gap:14px; color:#f2a93c;">Desliza
+      <svg viewBox="0 0 40 12" style="width:40px; height:12px;"><path d="M0 6 H34 M27 1 l7 5 l-7 5" fill="none" stroke="#f2a93c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

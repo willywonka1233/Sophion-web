@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #04060c; }
+    a { color: #f0b552; } a:hover { color: #ffd98a; }
+  </style>
+</helmet>
+<div style="position:relative; width:1080px; height:1350px; overflow:hidden; background:#04060c; font-family:Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#f4ecdd;">
+
+  <div style="position:absolute; inset:0; background:radial-gradient(112% 78% at 60% 18%, #101b2f 0%, #080d18 46%, #04060c 100%);"></div>
+
+  <svg viewBox="0 0 1080 1350" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+    <defs>
+      <radialGradient id="bok"><stop offset="0" stop-color="#ffc861" stop-opacity=".8"></stop><stop offset="50%" stop-color="#efa130" stop-opacity=".3"></stop><stop offset="100%" stop-color="#efa130" stop-opacity="0"></stop></radialGradient>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    </defs>
+    <g fill="url(#bok)">
+      <circle cx="128" cy="196" r="24"></circle><circle cx="242" cy="96" r="10"></circle><circle cx="66" cy="420" r="14"></circle>
+      <circle cx="318" cy="292" r="6"></circle><circle cx="196" cy="612" r="18"></circle><circle cx="92" cy="742" r="9"></circle>
+      <circle cx="286" cy="880" r="22"></circle><circle cx="146" cy="1046" r="12"></circle><circle cx="62" cy="1190" r="16"></circle>
+      <circle cx="352" cy="1136" r="7"></circle><circle cx="470" cy="1272" r="20"></circle><circle cx="612" cy="1108" r="10"></circle>
+      <circle cx="744" cy="1246" r="15"></circle><circle cx="880" cy="1050" r="8"></circle><circle cx="980" cy="1204" r="22"></circle>
+      <circle cx="1012" cy="860" r="11"></circle><circle cx="906" cy="640" r="17"></circle><circle cx="1020" cy="470" r="9"></circle>
+      <circle cx="812" cy="268" r="20"></circle><circle cx="946" cy="150" r="12"></circle><circle cx="676" cy="120" r="7"></circle>
+      <circle cx="536" cy="230" r="14"></circle>
+    </g>
+    <rect width="1080" height="1350" filter="url(#grain)" opacity=".055"></rect>
+  </svg>
+
+  <div style="position:absolute; inset:0; background:radial-gradient(80% 62% at 52% 42%, rgba(0,0,0,0) 44%, rgba(0,0,0,.5) 100%);"></div>
+
+  <svg viewBox="0 0 300 900" style="position:absolute; right:78px; top:330px; width:300px; height:900px;">
+    <defs>
+      <filter id="fg2" x="-60%" y="-20%" width="220%" height="140%">
+        <feGaussianBlur stdDeviation="6" result="b2"></feGaussianBlur>
+        <feMerge><feMergeNode in="b2"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+    </defs>
+    <g filter="url(#fg2)">
+      <g fill="none" stroke="#f2a93c" stroke-opacity=".22" stroke-width="1.4">
+        <path d="M150 60 C196 60 222 92 222 140 C222 186 194 220 150 220 C106 220 78 186 78 140 C78 92 104 60 150 60 Z"></path>
+      </g>
+      <path d="M150 200 C150 268 146 320 150 386 C154 452 146 520 150 596 C154 668 148 730 150 812"
+            fill="none" stroke="#f6b845" stroke-width="2.4" stroke-linecap="round"></path>
+      <g fill="none" stroke="#ffd07f" stroke-width="1.3" stroke-linecap="round" stroke-opacity=".78">
+        <path d="M150 386 C110 396 84 414 62 442"></path>
+        <path d="M150 386 C190 396 216 414 238 442"></path>
+        <path d="M150 500 C112 512 88 532 70 566"></path>
+        <path d="M150 500 C188 512 212 532 230 566"></path>
+        <path d="M150 620 C114 634 92 656 76 690"></path>
+        <path d="M150 620 C186 634 208 656 224 690"></path>
+        <path d="M150 812 l-30 46 M150 812 l30 46"></path>
+        <path d="M150 140 C126 122 112 100 110 74 M150 140 C174 122 188 100 190 74"></path>
+      </g>
+      <g fill="#ffe6ae">
+        <circle cx="150" cy="140" r="5"></circle>
+        <circle cx="150" cy="386" r="6"></circle>
+        <circle cx="150" cy="500" r="5"></circle>
+        <circle cx="150" cy="620" r="5"></circle>
+        <circle cx="150" cy="812" r="5"></circle>
+      </g>
+    </g>
+    <g fill="rgba(244,236,221,.5)" font-family="Archivo, Helvetica, Arial, sans-serif" font-size="17" letter-spacing="3">
+      <text x="196" y="146">TRONCO</text>
+      <text x="196" y="392">CORAZÓN</text>
+      <text x="196" y="506">PULMONES</text>
+      <text x="196" y="626">ESTÓMAGO</text>
+      <text x="196" y="818">INTESTINO</text>
+    </g>
+  </svg>
+
+  <div style="position:absolute; left:96px; top:96px; display:flex; align-items:center; gap:22px;">
+    <span style="display:block; width:56px; height:1px; background:#f2a93c;"></span>
+    <span style="font-size:22px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:#f2a93c;">01 — El cableado</span>
+  </div>
+
+  <h2 style="position:absolute; left:96px; top:172px; margin:0; width:820px; font-family:'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-weight:600; font-size:96px; line-height:0.98; color:#f7efe0;">
+    No es un nervio.<br>Es una autopista.
+  </h2>
+
+  <div style="position:absolute; left:96px; top:400px; width:560px; display:flex; flex-direction:column; gap:36px;">
+    <p style="margin:0; font-size:33px; line-height:1.5; color:rgba(244,236,221,.82); text-wrap:pretty;">
+      Sale del tronco encefálico y baja hasta el intestino, tocando por el camino corazón, pulmones, estómago e hígado.
+    </p>
+    <p style="margin:0; font-size:33px; line-height:1.5; color:rgba(244,236,221,.82); text-wrap:pretty;">
+      El 80&nbsp;% de sus fibras son <strong style="font-weight:600; color:#f8c168;">aferentes</strong>: informan al cerebro de lo que pasa dentro de ti. Solo el 20&nbsp;% da órdenes hacia abajo.
+    </p>
+  </div>
+
+  <div style="position:absolute; left:96px; bottom:216px; width:600px; border-left:2px solid #f2a93c; padding-left:34px;">
+    <p style="margin:0; font-family:'Cormorant Garamond', Georgia, serif; font-style:italic; font-size:44px; line-height:1.22; color:#f7efe0; text-wrap:pretty;">
+      Tu cerebro no decide tu estado. Lo deduce de tu cuerpo.
+    </p>
+  </div>
+
+  <div style="position:absolute; left:96px; right:96px; bottom:76px; display:flex; justify-content:space-between; align-items:center; font-size:22px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,221,.42);">
+    <span>@sophionclub</span>
+    <span>02 / 07</span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

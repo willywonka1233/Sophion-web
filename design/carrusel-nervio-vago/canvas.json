@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",      "x": 0,    "y": 0,    "w": 1080, "h": 1350, "title": "01 · Portada" },
+    { "file": "Cableado.dc.html",  "x": 1220, "y": 0,    "w": 1080, "h": 1350, "title": "02 · El cableado" },
+    { "file": "Senal.dc.html",     "x": 2440, "y": 0,    "w": 1080, "h": 1350, "title": "03 · La señal" },
+    { "file": "Ruido.dc.html",     "x": 3660, "y": 0,    "w": 1080, "h": 1350, "title": "04 · Lo que lo apaga" },
+    { "file": "Palancas.dc.html",  "x": 0,    "y": 1530, "w": 1080, "h": 1350, "title": "05 · Tres palancas" },
+    { "file": "Protocolo.dc.html", "x": 1220, "y": 1530, "w": 1080, "h": 1350, "title": "06 · Protocolo" },
+    { "file": "Cierre.dc.html",    "x": 2440, "y": 1530, "w": 1080, "h": 1350, "title": "07 · Cierre" }
+  ],
+  "annotations": [
+    { "id": "formato", "x": 3660, "y": 1530, "w": 400, "text": "Formato 1080 × 1350 (4:5), el que más pantalla ocupa en el feed.\n\nExporta cada tabla en PNG desde la barra de herramientas y súbelas en este orden." }
+  ],
+  "launch": { "view": "canvas" }
+}

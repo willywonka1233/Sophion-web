@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #04060c; }
+    a { color: #f0b552; } a:hover { color: #ffd98a; }
+  </style>
+</helmet>
+<div style="position:relative; width:1080px; height:1350px; overflow:hidden; background:#04060c; font-family:Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#f4ecdd;">
+
+  <div style="position:absolute; inset:0; background:radial-gradient(112% 78% at 60% 18%, #101b2f 0%, #080d18 46%, #04060c 100%);"></div>
+
+  <svg viewBox="0 0 1080 1350" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+    <defs>
+      <radialGradient id="bok"><stop offset="0" stop-color="#ffc861" stop-opacity=".8"></stop><stop offset="50%" stop-color="#efa130" stop-opacity=".3"></stop><stop offset="100%" stop-color="#efa130" stop-opacity="0"></stop></radialGradient>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    </defs>
+    <g fill="url(#bok)">
+      <circle cx="128" cy="196" r="24"></circle><circle cx="242" cy="96" r="10"></circle><circle cx="66" cy="420" r="14"></circle>
+      <circle cx="318" cy="292" r="6"></circle><circle cx="196" cy="612" r="18"></circle><circle cx="92" cy="742" r="9"></circle>
+      <circle cx="286" cy="880" r="22"></circle><circle cx="146" cy="1046" r="12"></circle><circle cx="62" cy="1190" r="16"></circle>
+      <circle cx="352" cy="1136" r="7"></circle><circle cx="470" cy="1272" r="20"></circle><circle cx="612" cy="1108" r="10"></circle>
+      <circle cx="744" cy="1246" r="15"></circle><circle cx="880" cy="1050" r="8"></circle><circle cx="980" cy="1204" r="22"></circle>
+      <circle cx="1012" cy="860" r="11"></circle><circle cx="906" cy="640" r="17"></circle><circle cx="1020" cy="470" r="9"></circle>
+      <circle cx="812" cy="268" r="20"></circle><circle cx="946" cy="150" r="12"></circle><circle cx="676" cy="120" r="7"></circle>
+      <circle cx="536" cy="230" r="14"></circle>
+    </g>
+    <rect width="1080" height="1350" filter="url(#grain)" opacity=".055"></rect>
+  </svg>
+
+  <div style="position:absolute; inset:0; background:radial-gradient(80% 62% at 52% 42%, rgba(0,0,0,0) 44%, rgba(0,0,0,.5) 100%);"></div>
+
+  <svg viewBox="0 0 460 460" style="position:absolute; right:-96px; top:132px; width:460px; height:460px;">
+    <defs>
+      <filter id="fg4" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="5" result="b4"></feGaussianBlur>
+        <feMerge><feMergeNode in="b4"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+    </defs>
+    <g fill="none" stroke="#f2a93c" stroke-linecap="round">
+      <circle cx="230" cy="230" r="206" stroke-width="1.4" stroke-opacity=".4"></circle>
+      <circle cx="230" cy="230" r="168" stroke-width="1" stroke-opacity=".24" stroke-dasharray="2 10"></circle>
+    </g>
+    <g filter="url(#fg4)">
+      <path d="M230 132 L326 300 H134 Z" fill="none" stroke="#ffca6d" stroke-width="2.4" stroke-linejoin="round" stroke-opacity=".9"></path>
+      <path d="M230 194 v54 M230 272 v6" stroke="#ffe6ae" stroke-width="3.4" stroke-linecap="round"></path>
+    </g>
+  </svg>
+
+  <div style="position:absolute; left:96px; top:96px; display:flex; align-items:center; gap:22px;">
+    <span style="display:block; width:56px; height:1px; background:#f2a93c;"></span>
+    <span style="font-size:22px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:#f2a93c;">03 — Lo que lo apaga</span>
+  </div>
+
+  <h2 style="position:absolute; left:96px; top:172px; margin:0; width:640px; font-family:'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-weight:600; font-size:96px; line-height:0.98; color:#f7efe0;">
+    Cuatro apagones<br>diarios
+  </h2>
+
+  <div style="position:absolute; left:96px; right:96px; top:448px; display:flex; flex-direction:column;">
+    <div style="display:flex; gap:34px; padding:30px 0; border-top:1px solid rgba(244,236,221,.14);">
+      <span style="flex:none; width:52px; font-size:22px; font-weight:600; letter-spacing:.18em; color:#f2a93c; padding-top:8px;">01</span>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <span style="font-size:35px; font-weight:600; line-height:1.15; color:#f7efe0;">Respiración alta y corta</span>
+        <span style="font-size:26px; line-height:1.42; color:rgba(244,236,221,.62); text-wrap:pretty;">El pecho manda señal de amenaza al tronco encefálico, hora tras hora.</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:34px; padding:30px 0; border-top:1px solid rgba(244,236,221,.14);">
+      <span style="flex:none; width:52px; font-size:22px; font-weight:600; letter-spacing:.18em; color:#f2a93c; padding-top:8px;">02</span>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <span style="font-size:35px; font-weight:600; line-height:1.15; color:#f7efe0;">Pantallas pasadas las 23&nbsp;h</span>
+        <span style="font-size:26px; line-height:1.42; color:rgba(244,236,221,.62); text-wrap:pretty;">Retrasan la caída nocturna del ritmo cardíaco y con ella la recuperación.</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:34px; padding:30px 0; border-top:1px solid rgba(244,236,221,.14);">
+      <span style="flex:none; width:52px; font-size:22px; font-weight:600; letter-spacing:.18em; color:#f2a93c; padding-top:8px;">03</span>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <span style="font-size:35px; font-weight:600; line-height:1.15; color:#f7efe0;">Comer con prisa</span>
+        <span style="font-size:26px; line-height:1.42; color:rgba(244,236,221,.62); text-wrap:pretty;">Sin fase parasimpática no hay digestión completa. De pie y en cinco minutos, no la hay.</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:34px; padding:30px 0; border-top:1px solid rgba(244,236,221,.14); border-bottom:1px solid rgba(244,236,221,.14);">
+      <span style="flex:none; width:52px; font-size:22px; font-weight:600; letter-spacing:.18em; color:#f2a93c; padding-top:8px;">04</span>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <span style="font-size:35px; font-weight:600; line-height:1.15; color:#f7efe0;">Estrés sin cierre</span>
+        <span style="font-size:26px; line-height:1.42; color:rgba(244,236,221,.62); text-wrap:pretty;">La amenaza que nunca se resuelve deja el circuito encendido de fondo.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute; left:96px; right:96px; bottom:76px; display:flex; justify-content:space-between; align-items:center; font-size:22px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,221,.42);">
+    <span>@sophionclub</span>
+    <span>04 / 07</span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

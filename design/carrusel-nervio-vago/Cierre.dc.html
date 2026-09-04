@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #04060c; }
+    a { color: #f0b552; } a:hover { color: #ffd98a; }
+  </style>
+</helmet>
+<div style="position:relative; width:1080px; height:1350px; overflow:hidden; background:#04060c; font-family:Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#f4ecdd;">
+
+  <div style="position:absolute; inset:0; background:radial-gradient(112% 78% at 60% 18%, #101b2f 0%, #080d18 46%, #04060c 100%);"></div>
+
+  <svg viewBox="0 0 1080 1350" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+    <defs>
+      <radialGradient id="bok"><stop offset="0" stop-color="#ffc861" stop-opacity=".8"></stop><stop offset="50%" stop-color="#efa130" stop-opacity=".3"></stop><stop offset="100%" stop-color="#efa130" stop-opacity="0"></stop></radialGradient>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    </defs>
+    <g fill="url(#bok)">
+      <circle cx="128" cy="196" r="24"></circle><circle cx="242" cy="96" r="10"></circle><circle cx="66" cy="420" r="14"></circle>
+      <circle cx="318" cy="292" r="6"></circle><circle cx="196" cy="612" r="18"></circle><circle cx="92" cy="742" r="9"></circle>
+      <circle cx="286" cy="880" r="22"></circle><circle cx="146" cy="1046" r="12"></circle><circle cx="62" cy="1190" r="16"></circle>
+      <circle cx="352" cy="1136" r="7"></circle><circle cx="470" cy="1272" r="20"></circle><circle cx="612" cy="1108" r="10"></circle>
+      <circle cx="744" cy="1246" r="15"></circle><circle cx="880" cy="1050" r="8"></circle><circle cx="980" cy="1204" r="22"></circle>
+      <circle cx="1012" cy="860" r="11"></circle><circle cx="906" cy="640" r="17"></circle><circle cx="1020" cy="470" r="9"></circle>
+      <circle cx="812" cy="268" r="20"></circle><circle cx="946" cy="150" r="12"></circle><circle cx="676" cy="120" r="7"></circle>
+      <circle cx="536" cy="230" r="14"></circle>
+    </g>
+    <rect width="1080" height="1350" filter="url(#grain)" opacity=".055"></rect>
+  </svg>
+
+  <div style="position:absolute; inset:0; background:radial-gradient(80% 62% at 52% 42%, rgba(0,0,0,0) 44%, rgba(0,0,0,.5) 100%);"></div>
+
+  <svg viewBox="0 0 600 820" style="position:absolute; left:50%; top:120px; transform:translateX(-50%); width:660px; height:902px; opacity:.5;">
+    <defs>
+      <filter id="fg7" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="9" result="b7"></feGaussianBlur>
+        <feMerge><feMergeNode in="b7"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <radialGradient id="core7"><stop offset="0" stop-color="#fff3d2"></stop><stop offset="45%" stop-color="#ffc861" stop-opacity=".6"></stop><stop offset="100%" stop-color="#f0a231" stop-opacity="0"></stop></radialGradient>
+    </defs>
+    <circle cx="300" cy="470" r="150" fill="url(#core7)" opacity=".7"></circle>
+    <g filter="url(#fg7)">
+      <g fill="none" stroke="#f2a93c" stroke-opacity=".2" stroke-width="1.6" stroke-linecap="round">
+        <path d="M300 60 C356 60 392 104 392 172 C392 236 354 288 300 288 C246 288 208 236 208 172 C208 104 244 60 300 60 Z"></path>
+        <path d="M256 280 C256 316 250 336 238 346 C176 372 116 404 92 452 C70 496 62 610 58 820"></path>
+        <path d="M344 280 C344 316 350 336 362 346 C424 372 484 404 508 452 C530 496 538 610 542 820"></path>
+      </g>
+      <g fill="none" stroke="#f6b845" stroke-width="1.9" stroke-linecap="round" stroke-opacity=".8">
+        <path d="M300 196 C300 258 298 300 300 348"></path>
+        <path d="M300 348 C300 432 296 522 300 624"></path>
+        <path d="M300 348 C250 372 210 404 176 452"></path>
+        <path d="M300 348 C350 372 390 404 424 452"></path>
+        <path d="M176 452 C140 522 118 620 108 742"></path>
+        <path d="M424 452 C460 522 482 620 492 742"></path>
+      </g>
+      <g fill="none" stroke="#ffd07f" stroke-width="1.1" stroke-linecap="round" stroke-opacity=".6">
+        <path d="M300 196 C272 172 254 146 250 112 M300 196 C328 172 346 146 350 112"></path>
+        <path d="M300 470 l-64 -42 M300 470 l64 -42 M300 470 l-72 44 M300 470 l72 44 M300 470 l-38 88 M300 470 l38 88"></path>
+        <path d="M300 624 l-34 56 M300 624 l34 56 M300 624 l0 72"></path>
+      </g>
+      <g fill="#ffe6ae">
+        <circle cx="300" cy="196" r="4.5"></circle><circle cx="300" cy="348" r="5.5"></circle>
+        <circle cx="176" cy="452" r="4"></circle><circle cx="424" cy="452" r="4"></circle><circle cx="300" cy="624" r="4.5"></circle>
+      </g>
+    </g>
+    <circle cx="300" cy="470" r="7" fill="#fff6de"></circle>
+  </svg>
+
+  <div style="position:absolute; inset:0; background:linear-gradient(to top, #04060c 6%, rgba(4,6,12,.9) 34%, rgba(4,6,12,.55) 62%, rgba(4,6,12,.7) 100%);"></div>
+
+  <div style="position:absolute; left:96px; right:96px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:44px; text-align:center;">
+    <span style="display:block; width:56px; height:1px; background:#f2a93c;"></span>
+    <h2 style="margin:0; font-family:'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-weight:600; font-size:100px; line-height:1.0; color:#f7efe0; text-wrap:balance;">
+      Regular tu sistema nervioso es una <em style="font-style:italic; color:#f8c168;">habilidad</em>
+    </h2>
+    <p style="margin:0; max-width:640px; font-size:33px; line-height:1.45; color:rgba(244,236,221,.72); text-wrap:pretty;">
+      No un rasgo de carácter. Se practica, se mide y se nota en semanas.
+    </p>
+  </div>
+
+  <div style="position:absolute; left:96px; right:96px; bottom:210px; display:flex; flex-direction:column; align-items:center; gap:30px;">
+    <span style="font-size:27px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:#f2a93c;">Guárdalo y vuelve el día 7</span>
+    <div style="display:flex; align-items:baseline; gap:16px;">
+      <span style="font-size:44px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:#f7efe0;">Sophion</span>
+      <span style="font-size:44px; font-weight:400; letter-spacing:.3em; text-transform:uppercase; color:rgba(244,236,221,.5);">Club</span>
+    </div>
+  </div>
+
+  <div style="position:absolute; left:96px; right:96px; bottom:76px; display:flex; justify-content:space-between; align-items:center; font-size:20px; font-weight:500; letter-spacing:.14em; color:rgba(244,236,221,.34);">
+    <span>Contenido divulgativo. No sustituye consejo médico.</span>
+    <span style="letter-spacing:.22em; text-transform:uppercase;">07 / 07</span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>
