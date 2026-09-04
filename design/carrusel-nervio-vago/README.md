@@ -14,6 +14,8 @@ lenguaje visual de @sophionclub.
 | `Palancas.dc.html` | 05 · Tres palancas |
 | `Protocolo.dc.html` | 06 · Protocolo de 7 días |
 | `Cierre.dc.html` | 07 · Cierre y CTA |
+| `figura.jpg` `busto.jpg` `frio.jpg` | Imágenes de fondo (provisionales) |
+| `PROMPTS.md` | Prompts para regenerar las imágenes |
 | `canvas.json` | Posición de cada tabla en el lienzo |
 | `nervio-vago-carrusel.html` | Lienzo generado (no editar a mano) |
 
@@ -42,8 +44,15 @@ Retícula
 : márgenes de 96 px; antetítulo en y 96; titular en y 172 a 96 px con
   `line-height: .98`; pie a 76 px del borde inferior.
 
+Imagen
+: las diapositivas 01, 02, 05 y 07 se montan sobre fotografía a sangre
+  (`object-fit: cover`) con un degradado de oscurecimiento encima y la
+  tipografía en la mitad inferior. Las imágenes actuales son las portadas de
+  las publicaciones existentes a 640 × 640: sirven de referencia de encuadre,
+  no de material final. Ver `PROMPTS.md`.
+
 Ilustración
-: figura neural en SVG (`viewBox 0 0 600 820`) — contorno del busto al 26 % de
+: gráficos HUD en SVG y figura neural en SVG (`viewBox 0 0 600 820`) — contorno del busto al 26 % de
   opacidad, troncos dorados de 2,1 px, dendritas de 1,2 px, nodos luminosos y
   un plexo radial en el pecho, todo con un filtro de resplandor
   (`feGaussianBlur` + doble `feMerge`).
