@@ -24,6 +24,8 @@ abre su billetera, pega y transfiere. Eso es lo que hay en esta carpeta.
 | QR interoperable / Transferencias 3.0 | tope de 8‰ (0,8%) |
 | **Transferencia a tu alias o CBU** | **0%** |
 
+El alias configurado es `babyytron`.
+
 Ese ~6,29% + IVA (21%) es lo que te llega arriba del 7,5%, y con retenciones de
 IIBB según tu jurisdicción explica el 10% que estás viendo.
 
@@ -33,9 +35,14 @@ medio que cobre: el dinero va de cuenta a cuenta.
 
 ## Cómo usarlo
 
-1. **Cargá tus datos** en `config.js`: alias, CBU, titular, CUIT y tu WhatsApp.
-   El titular tiene que coincidir con lo que el cliente ve al transferir, si no
-   desconfía y abandona.
+1. **Cargá tus datos** en `config.js`. Con el alias solo ya funciona: los
+   campos vacíos no se muestran. Los dos que más conviene completar después:
+
+   - `titular`: al pegar el alias, la billetera del cliente le muestra igual a
+     quién le transfiere. Si coincide con lo que dice la página, confía; si la
+     página no dice nada, algunos abandonan.
+   - `whatsapp`: sin esto no hay botón para mandarte el comprobante, y te
+     enterás de cada pago solo mirando la cuenta.
 2. **Subí la carpeta `pago/`** a tu hosting. Son tres archivos estáticos, sin
    build ni servidor: funciona en cualquier hosting, Netlify, Vercel,
    GitHub Pages o incluso dentro de un WordPress.

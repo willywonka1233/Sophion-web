@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
 <title>Pagar por transferencia</title>
 <style>
   :root {
@@ -28,6 +29,7 @@
     }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     background: var(--bg);
@@ -73,6 +75,7 @@
     word-break: break-all;
   }
   .fila .valor.texto { font-family: inherit; font-weight: 500; }
+  .fila.destacada .valor { font-size: 24px; letter-spacing: .5px; }
 
   button {
     font: inherit;
@@ -151,7 +154,7 @@
       <li>Copiá el alias y pegalo en tu app de banco o billetera.</li>
       <li>Transferí el monto exacto que figura arriba.</li>
       <li>Escribí <span class="ref" id="ref-paso">—</span> en el campo de referencia o motivo.</li>
-      <li>Mandanos el comprobante con el botón de abajo.</li>
+      <li id="paso-comprobante">Mandanos el comprobante con el botón de abajo.</li>
     </ol>
   </section>
 
@@ -196,7 +199,7 @@
 
   // --- Datos de la cuenta. Solo se muestran los que estén cargados.
   var campos = [
-    { rotulo: "Alias", valor: cfg.alias, copiable: true },
+    { rotulo: "Alias", valor: cfg.alias, copiable: true, destacado: true },
     { rotulo: "CBU / CVU", valor: cfg.cbu, copiable: true },
     { rotulo: "Titular", valor: cfg.titular, texto: true },
     { rotulo: "CUIT / CUIL", valor: cfg.cuit, copiable: true },
@@ -208,7 +211,7 @@
     if (!campo.valor) return;
 
     var fila = document.createElement("div");
-    fila.className = "fila";
+    fila.className = campo.destacado ? "fila destacada" : "fila";
 
     var datos = document.createElement("div");
     datos.className = "datos";
@@ -244,6 +247,7 @@
 
     contenedor.appendChild(fila);
   });
+
 
   // Clipboard API no existe en http:// ni en webviews viejas; de ahí el fallback.
   function copiar(texto) {
@@ -281,6 +285,8 @@
     botonWa.href = "https://wa.me/" + cfg.whatsapp + "?text=" + encodeURIComponent(mensaje);
   } else {
     botonWa.hidden = true;
+    document.getElementById("paso-comprobante").textContent =
+      "Guardá el comprobante de la transferencia.";
   }
 
   // --- Atajo a la app. Mercado Pago no publica un deep link que precargue
