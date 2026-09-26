@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pagar por transferencia</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #14161a;
+    --muted: #5f6672;
+    --line: #e3e6ea;
+    --accent: #00a650;
+    --accent-ink: #ffffff;
+    --chip: #eef7f1;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101216;
+      --card: #191c22;
+      --text: #f2f4f7;
+      --muted: #9aa2ae;
+      --line: #2a2f38;
+      --chip: #16251c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 20px 16px 48px;
+  }
+  main { max-width: 480px; margin: 0 auto; }
+
+  .monto-box { text-align: center; margin-bottom: 20px; }
+  .monto { font-size: 40px; font-weight: 700; letter-spacing: -1px; }
+  .concepto { color: var(--muted); font-size: 15px; }
+  .vence { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+
+  .fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+  .fila:first-of-type { border-top: 0; }
+  .fila .datos { min-width: 0; flex: 1; }
+  .fila .rotulo { font-size: 12px; color: var(--muted); }
+  .fila .valor {
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all;
+  }
+  .fila .valor.texto { font-family: inherit; font-weight: 500; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text);
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+  button:active { transform: translateY(1px); }
+  .copiar { font-size: 13px; font-weight: 600; }
+  .copiar[data-listo="1"] { background: var(--chip); border-color: var(--accent); color: var(--accent); }
+
+  .cta {
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 0;
+  }
+  .cta.secundaria {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+
+  ol { margin: 0; padding-left: 20px; }
+  ol li { margin-bottom: 8px; }
+  .ref {
+    display: inline-block;
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    background: var(--chip);
+    color: var(--accent);
+    padding: 1px 7px;
+    border-radius: 6px;
+  }
+  .qr { text-align: center; }
+  .qr img { max-width: 220px; width: 100%; height: auto; border-radius: 10px; }
+  .pie { text-align: center; font-size: 13px; color: var(--muted); margin-top: 18px; }
+  .sr {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="monto-box">
+    <div class="monto" id="monto">—</div>
+    <div class="concepto" id="concepto"></div>
+    <div class="vence" id="vence" hidden></div>
+  </div>
+
+  <section class="card">
+    <h2>Transferí a esta cuenta</h2>
+    <div id="cuenta"></div>
+  </section>
+
+  <section class="card qr" id="bloque-qr" hidden>
+    <h2>O escaneá el QR</h2>
+    <img id="qr" alt="Código QR para transferir">
+  </section>
+
+  <section class="card">
+    <h2>Cómo completar el pago</h2>
+    <ol>
+      <li>Copiá el alias y pegalo en tu app de banco o billetera.</li>
+      <li>Transferí el monto exacto que figura arriba.</li>
+      <li>Escribí <span class="ref" id="ref-paso">—</span> en el campo de referencia o motivo.</li>
+      <li>Mandanos el comprobante con el botón de abajo.</li>
+    </ol>
+  </section>
+
+  <a class="cta" id="btn-wa" href="#">Ya transferí, enviar comprobante</a>
+  <button class="cta secundaria" id="btn-app" type="button">Abrir app de Mercado Pago</button>
+
+  <p class="pie">Pago por transferencia bancaria. Sin comisiones ni recargos.</p>
+  <p class="sr" role="status" aria-live="polite" id="aviso"></p>
+</main>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var cfg = window.PAGO_CONFIG || {};
+  var params = new URLSearchParams(location.search);
+
+  // --- Monto y concepto vienen por querystring: ?monto=25000&concepto=Plan+Pro
+  var monto = Number(params.get("monto")) || cfg.montoPorDefecto;
+  var concepto = params.get("concepto") || "";
+
+  var formato = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: monto && monto % 1 ? 2 : 0,
+  });
+  document.getElementById("monto").textContent = monto ? formato.format(monto) : "Monto a convenir";
+  document.getElementById("concepto").textContent = concepto;
+
+  // --- Referencia: la que venga en el link, o una generada y guardada para
+  // que no cambie si el cliente recarga la página a mitad del pago.
+  var ref = params.get("ref");
+  if (!ref) {
+    ref = sessionStorage.getItem("pago_ref");
+    if (!ref) {
+      ref = "REF-" + Date.now().toString(36).toUpperCase().slice(-6);
+      try { sessionStorage.setItem("pago_ref", ref); } catch (e) { /* modo privado */ }
+    }
+  }
+  document.getElementById("ref-paso").textContent = ref;
+
+  // --- Datos de la cuenta. Solo se muestran los que estén cargados.
+  var campos = [
+    { rotulo: "Alias", valor: cfg.alias, copiable: true },
+    { rotulo: "CBU / CVU", valor: cfg.cbu, copiable: true },
+    { rotulo: "Titular", valor: cfg.titular, texto: true },
+    { rotulo: "CUIT / CUIL", valor: cfg.cuit, copiable: true },
+    { rotulo: "Banco o billetera", valor: cfg.banco, texto: true },
+  ];
+
+  var contenedor = document.getElementById("cuenta");
+  campos.forEach(function (campo) {
+    if (!campo.valor) return;
+
+    var fila = document.createElement("div");
+    fila.className = "fila";
+
+    var datos = document.createElement("div");
+    datos.className = "datos";
+    var rotulo = document.createElement("div");
+    rotulo.className = "rotulo";
+    rotulo.textContent = campo.rotulo;
+    var valor = document.createElement("div");
+    valor.className = campo.texto ? "valor texto" : "valor";
+    valor.textContent = campo.valor;
+    datos.appendChild(rotulo);
+    datos.appendChild(valor);
+    fila.appendChild(datos);
+
+    if (campo.copiable) {
+      var boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "copiar";
+      boton.textContent = "Copiar";
+      boton.setAttribute("aria-label", "Copiar " + campo.rotulo);
+      boton.addEventListener("click", function () {
+        copiar(String(campo.valor)).then(function () {
+          boton.textContent = "Copiado";
+          boton.dataset.listo = "1";
+          document.getElementById("aviso").textContent = campo.rotulo + " copiado";
+          setTimeout(function () {
+            boton.textContent = "Copiar";
+            delete boton.dataset.listo;
+          }, 2000);
+        });
+      });
+      fila.appendChild(boton);
+    }
+
+    contenedor.appendChild(fila);
+  });
+
+  // Clipboard API no existe en http:// ni en webviews viejas; de ahí el fallback.
+  function copiar(texto) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(texto);
+    }
+    var area = document.createElement("textarea");
+    area.value = texto;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); } catch (e) { /* sin permiso */ }
+    document.body.removeChild(area);
+    return Promise.resolve();
+  }
+
+  // --- QR opcional, exportado desde la propia app de Mercado Pago.
+  if (cfg.qrImagen) {
+    document.getElementById("qr").src = cfg.qrImagen;
+    document.getElementById("bloque-qr").hidden = false;
+  }
+
+  // --- WhatsApp con el pedido ya escrito, para no depender de que el
+  // cliente nos explique qué pagó.
+  var mensaje =
+    "Hola! Ya hice la transferencia." +
+    "\nReferencia: " + ref +
+    (concepto ? "\nConcepto: " + concepto : "") +
+    (monto ? "\nMonto: " + formato.format(monto) : "") +
+    "\nAdjunto el comprobante.";
+  var botonWa = document.getElementById("btn-wa");
+  if (cfg.whatsapp) {
+    botonWa.href = "https://wa.me/" + cfg.whatsapp + "?text=" + encodeURIComponent(mensaje);
+  } else {
+    botonWa.hidden = true;
+  }
+
+  // --- Atajo a la app. Mercado Pago no publica un deep link que precargue
+  // alias y monto, así que esto solo abre la app (o la web si no está
+  // instalada); el alias ya quedó en el portapapeles con el botón Copiar.
+  document.getElementById("btn-app").addEventListener("click", function () {
+    copiar(String(cfg.alias || ""));
+    var volvio = false;
+    var alOcultar = function () { volvio = true; };
+    document.addEventListener("visibilitychange", alOcultar, { once: true });
+
+    location.href = "mercadopago://";
+    setTimeout(function () {
+      document.removeEventListener("visibilitychange", alOcultar);
+      if (!volvio && !document.hidden) {
+        window.open("https://www.mercadopago.com.ar/", "_blank", "noopener");
+      }
+    }, 1200);
+  });
+
+  // --- Vencimiento del precio, si se configuró.
+  if (cfg.vencimientoMinutos) {
+    var vence = new Date(Date.now() + cfg.vencimientoMinutos * 60000);
+    var cartel = document.getElementById("vence");
+    cartel.hidden = false;
+    cartel.textContent =
+      "Precio válido hasta las " +
+      vence.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) +
+      " · Ref. " + ref;
+  }
+})();
+</script>
+</body>
+</html>
