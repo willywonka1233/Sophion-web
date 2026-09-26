@@ -1,0 +1,66 @@
+{
+  "_README": "CONTENIDO DE PRUEBA para testear el layout de la seccion de testimonios. NO PUBLICAR. Cada nombre lleva el sufijo (DEMO) a proposito: mantiene el largo de caracteres realista para el diseno pero es imposible que se publique sin que se note. Buscar '(DEMO)' o 'isPlaceholder' antes de cada deploy.",
+  "_shipCheck": "grep -rn '(DEMO)\\|isPlaceholder' ./src && echo 'FALTA REEMPLAZAR TESTIMONIOS'",
+  "items": [
+    {
+      "id": "ph-01",
+      "isPlaceholder": true,
+      "name": "Ana R. (DEMO)",
+      "location": "",
+      "hasPhoto": false,
+      "stars": 5,
+      "_caso": "nombre minimo + texto minimo + sin foto + sin ciudad -> tarjeta mas chica posible",
+      "body": "Brotó el día 19. Ya la había dado por perdida."
+    },
+    {
+      "id": "ph-02",
+      "isPlaceholder": true,
+      "name": "Sebastián M. (DEMO)",
+      "location": "Rosario, Santa Fe",
+      "hasPhoto": true,
+      "stars": 5,
+      "_caso": "largo medio, el caso mas comun -> es el que define la altura base de la grilla",
+      "body": "Había comprado un kit el año pasado y no me creció nada, tiré todo pensando que era yo. Lo que me cambió fue el semáforo: vi una mancha al quinto día y en vez de tirar la bolsa entendí que era normal. Cosechamos como un kilo y medio."
+    },
+    {
+      "id": "ph-03",
+      "isPlaceholder": true,
+      "name": "María Fernanda Etchegoyen Sosa (DEMO)",
+      "location": "San Carlos de Bariloche, Río Negro",
+      "hasPhoto": true,
+      "stars": 5,
+      "_caso": "nombre Y ciudad en el maximo realista -> chequear que no rompa el header de la tarjeta ni haga wrap de 3 lineas",
+      "body": "Vivo en zona fría y pensaba que no iba a funcionar."
+    },
+    {
+      "id": "ph-04",
+      "isPlaceholder": true,
+      "name": "Cristian (DEMO)",
+      "location": "CABA",
+      "hasPhoto": false,
+      "stars": 4,
+      "_caso": "TEXTO MAXIMO (~450 chars) + salto de linea + 4 estrellas -> el caso que rompe grillas de altura fija. Si esto no entra, hace falta clamp o 'ver mas'.",
+      "body": "Lo que más me sirvió fue el calendario, porque yo soy de los que abandonan. Entre el día 12 y el 20 no pasa absolutamente nada y uno se convence de que falló.\n\nLa primera camada me dio poco, como 600 gramos, pero la segunda oleada fue el doble y ahí entendí que el bloque servía. Le puse 4 estrellas porque me hubiera gustado más detalle sobre dónde conseguir el sustrato en mi zona, el resto impecable."
+    },
+    {
+      "id": "ph-05",
+      "isPlaceholder": true,
+      "name": "Nuria Ñanduví (DEMO)",
+      "location": "Córdoba",
+      "hasPhoto": true,
+      "stars": 5,
+      "_caso": "tildes, ñ, comillas, guion largo, emoji y una palabra en MAYUSCULAS -> chequear font fallback, kerning y que el emoji no empuje el line-height",
+      "body": "Mi marido decía «esto no va a andar» y bueno... ANDUVO 😄 Coseché dos veces del mismo bloque — la segunda tardó más pero salió igual."
+    },
+    {
+      "id": "ph-06",
+      "isPlaceholder": true,
+      "name": "Jorge L. (DEMO)",
+      "location": "Tandil, Buenos Aires",
+      "hasPhoto": true,
+      "stars": 5,
+      "_caso": "una sola oracion larga sin puntuacion interna -> chequear que no haya overflow horizontal ni palabra cortada",
+      "body": "Tengo 61 años y nunca cultivé nada en mi vida y la verdad que si esto lo pude hacer yo lo puede hacer cualquiera solo hay que mirar la ficha del día que corresponde y hacer lo que dice nada más."
+    }
+  ]
+}
