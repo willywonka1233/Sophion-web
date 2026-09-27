@@ -863,7 +863,9 @@ fbq('track', 'PageView');
      'fbclid','ttclid','gclid','fbp','fbc'].forEach(function(k){
       if(TRK[k]) u.searchParams.set(k, TRK[k]);
     });
-    return u.toString();
+    /* los espacios van como %20 y no como +: asi los lee cualquier checkout */
+    var s = u.toString(), i = s.indexOf('?');
+    return i < 0 ? s : s.slice(0, i) + s.slice(i).replace(/\+/g, '%20');
   }
 
   track('track','ViewContent',{content_name:CFG.PRODUCTO, content_category:'landing', value:CFG.VALOR, currency:CFG.MONEDA});
