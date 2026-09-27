@@ -76,9 +76,10 @@ window.CONFIG = {
 <link rel="dns-prefetch" href="https://cdn.utmify.com.br">
 <link rel="dns-prefetch" href="https://script.google.com">
 <link rel="dns-prefetch" href="https://www.clarity.ms">
-<!-- Microsoft Clarity -->
+<!-- Microsoft Clarity. Si la tienda ya lo inyecta, este bloque no hace nada. -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
+        if(l.querySelector('script[src*="clarity.ms/tag/"]')) return;
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
