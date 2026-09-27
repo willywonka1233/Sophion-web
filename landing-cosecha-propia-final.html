@@ -574,6 +574,28 @@ fbq('track', 'PageView');
   </div>
 </section>
 
+<!-- Rescate del lazy load dentro de un preview.
+     Las imagenes con loading="lazy" solo se descargan al entrar en pantalla.
+     El editor de la tienda renderiza la pagina dentro de un iframe sin scroll
+     propio: ahi nunca entran y quedan en blanco. Si detectamos que estamos en
+     un iframe, las pasamos a carga normal. En la tienda publicada no cambia
+     nada y el lazy sigue ahorrando la descarga. -->
+<script>
+(function(){
+  var enIframe;
+  try { enIframe = window.self !== window.top; }
+  catch(e){ enIframe = true; }          /* si no podemos leer window.top, es un iframe */
+  if(!enIframe) return;
+  var im = document.querySelectorAll('img[loading="lazy"]');
+  for(var i=0;i<im.length;i++){
+    var u = im[i].getAttribute('src');
+    im[i].setAttribute('loading','eager');
+    im[i].removeAttribute('src');
+    im[i].setAttribute('src', u);       /* fuerza el pedido */
+  }
+})();
+</script>
+
 <!-- Slider de bonos (el de la plantilla, sin cambios) -->
 <script>
 (function () {
