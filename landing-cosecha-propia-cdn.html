@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<!--
+  ===================================================================
+  VERSION LIVIANA · las imagenes van como archivos, no dentro del HTML
+  ===================================================================
+
+  POR QUE
+    Con las imagenes en base64 el HTML pesa 779 KB y el visitante baja
+    TODO antes de ver el hero. Asi pesa 72 KB y al cargar solo pide 2
+    imagenes (hero y problema): 143 KB en total. Las otras 12 (459 KB)
+    se bajan recien al hacer scroll. Ahi es donde el lazy load sirve.
+
+  COMO USARLA  (3 pasos)
+    1. Subi los 14 archivos de la carpeta img/ al gestor de archivos
+       de tu tienda.
+    2. Copia la URL publica de cada uno.
+    3. Reemplaza cada marcador de abajo por su URL (Ctrl+H / find-replace).
+       Si todos los archivos quedan en la misma carpeta, podes reemplazar
+       de una sola vez la parte comun de la URL.
+
+  MARCADORES  (14)
+     __IMG_HERO__                 ->  img/hero.webp
+     __IMG_PROBLEMA__             ->  img/problema.webp
+     __IMG_PROCESO__              ->  img/proceso.webp
+     __IMG_OFERTA__               ->  img/oferta.webp
+     __IMG_BONO_1_SEMAFORO__      ->  img/bono-1-semaforo.webp
+     __IMG_BONO_2_CALENDARIO__    ->  img/bono-2-calendario.webp
+     __IMG_BONO_3_ARRANQUE__      ->  img/bono-3-arranque.webp
+     __IMG_BONO_4_RECETAS__       ->  img/bono-4-recetas.webp
+     __IMG_BONO_5_SUSTRATO__      ->  img/bono-5-sustrato.webp
+     __IMG_CHAT_1_NICOLAS__       ->  img/chat-1-nicolas.webp
+     __IMG_CHAT_2_LUCIANA__       ->  img/chat-2-luciana.webp
+     __IMG_CHAT_3_GUSTAVO__       ->  img/chat-3-gustavo.webp
+     __IMG_CHAT_4_FLORENCIA__     ->  img/chat-4-florencia.webp
+     __IMG_CHAT_5_GRACIELA__      ->  img/chat-5-graciela.webp
+
+  OJO: no borres el loading="lazy" de los <img>. Es lo que evita que se
+  bajen las imagenes de abajo del pliegue. El hero va sin lazy a proposito
+  (loading="eager" fetchpriority="high") porque es lo primero que se ve.
+-->
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#14301E">
+<title>Cosecha Propia · Cultivá hongos gourmet en casa</title>
+<meta name="description" content="45 fichas visuales para producir gírgolas en un rincón de tu casa. Sin campo, sin invernadero y sin experiencia. Pago único y acceso inmediato.">
+<meta name="robots" content="noindex">
+
+<!-- ===================================================================
+     CONFIGURACIÓN: lo único que hay que tocar
+     =================================================================== -->
+<script>
+window.CONFIG = {
+  // ID del Pixel de Meta
+  PIXEL_ID: "2327830021295903",
+
+  // Checkout de ImpulTienda (ruta de la misma tienda; es la que usa el quiz).
+  // Se le agregan solos el sid, los utm_*, fbclid, fbp y fbc.
+  CHECKOUT_URL: "/checkout",
+
+  // Planilla de Google (la misma del quiz). Vacío = no guarda nada.
+  SHEET_WEBHOOK: "https://script.google.com/macros/s/AKfycbzGGBWTgao-GcTUSOri7swTeFtMppmG_iQ2vFK51d6d2G6QNL5Sq2XE2To69oq-DFE/exec",
+
+  PRODUCTO: "Cosecha Propia",
+  VALOR: 19900,
+  MONEDA: "ARS"
+};
+</script>
+
+<link rel="preconnect" href="https://connect.facebook.net">
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', window.CONFIG.PIXEL_ID);
+fbq('track', 'PageView');
+</script>
+
+<!-- UTMify: script de UTMs -->
+<script src="https://cdn.utmify.com.br/scripts/utms/latest.js" data-utmify-prevent-xcod-sck data-utmify-prevent-subids async defer></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
+
+<style>.ssb__hero-copy .ssb__title-xl,.ssb__hero-copy .ssb__text-lg{text-shadow:0 2px 16px rgba(0,0,0,.66),0 1px 4px rgba(0,0,0,.55)}.ssb,.ssb *{box-sizing:border-box}.ssb{--ssb-bg:#f7f6ef;--ssb-card:#ffffff;--ssb-ink:#16251a;--ssb-gold:#2e7d42;--ssb-line:rgba(20,48,30,.16);--ssb-shadow:0 18px 40px rgba(20,48,30,.10);--ssb-shadow-soft:0 10px 24px rgba(20,48,30,.07);--ssb-radius-xl:28px;display:block;width:100%;padding:18px 0;color:var(--ssb-ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,rgba(46,125,66,.08),transparent 24%),linear-gradient(180deg,#fcfbf6 0%,var(--ssb-bg) 100%)}.ssb__wrap{width:100%;max-width:460px;margin:0 auto;padding:0 12px}.ssb__section{margin-bottom:22px}.ssb__card{background:linear-gradient(180deg,rgba(255,255,255,1) 0%,rgba(251,250,245,1) 100%);border:1px solid var(--ssb-line);border-radius:var(--ssb-radius-xl);box-shadow:var(--ssb-shadow);overflow:hidden}.ssb__title-xl{margin:0;font-size:clamp(42px,12vw,66px);line-height:.96;letter-spacing:-.04em;font-weight:800;color:#fbfaf5}.ssb__title-accent{color:var(--ssb-gold);font-style:italic}.ssb__text-lg{margin:0;color:#fbfaf5;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:18px;line-height:1.65;font-weight:700}.ssb__hero-visual{position:relative;min-height:520px;padding:18px 14px 18px 14px;background:#14301e}.ssb__hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center}.ssb__hero-copy .ssb__title-xl{font-size:clamp(38px,10.4vw,58px);text-shadow:0 2px 18px rgba(0,0,0,.72),0 1px 3px rgba(0,0,0,.55)}.ssb__hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,22,13,.55) 0%,rgba(8,22,13,.70) 38%,rgba(8,22,13,.90) 100%),linear-gradient(135deg,rgba(20,48,30,.22) 0%,rgba(10,26,16,.08) 100%)}.ssb__hero-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 14% 72%,rgba(255,255,255,.09),transparent 7%),radial-gradient(circle at 22% 80%,rgba(255,255,255,.06),transparent 6%),linear-gradient(180deg,rgba(255,255,255,.05),transparent 18%);pointer-events:none}.ssb__hero-kicker{position:relative;z-index:1;display:flex;justify-content:center;margin-bottom:10px}.ssb__hero-kicker-chip{display:inline-flex;align-items:center;padding:8px 18px;border-radius:999px;background:rgba(46,125,66,0.18);border:1px solid rgba(46,125,66,0.55);color:#cfe6d2;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:800;letter-spacing:0.03em;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}.ssb__hero-badges{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.ssb__hero-badge{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border-radius:999px;color:#f6f5ee;background:rgba(10,26,16,.74);border:1px solid rgba(46,125,66,.55);box-shadow:0 10px 18px rgba(0,0,0,.16);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:800}.ssb__hero-copy{position:absolute;right:18px;bottom:18px;left:18px;z-index:1;text-align:center;display:grid;gap:14px}.ssb__hero-bottom{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:18px 18px 20px 18px;background:linear-gradient(180deg,#f3f2e8 0%,#ebebdf 100%);border-top:1px solid rgba(20,48,30,.10)}.ssb__mini-benefit{justify-content:center;padding:12px 10px;display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.58);border:1px solid rgba(20,48,30,.10);border-radius:14px;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#3f5245;font-size:14px;font-weight:800}.ssb,.ssb *{box-sizing:border-box}.ssb{--ssb-bg:#f7f6ef;--ssb-bg-2:#fdfcf8;--ssb-card:#ffffff;--ssb-ink:#16251a;--ssb-brown:#1c5a2d;--ssb-brown-2:#2e6b3d;--ssb-gold:#2e7d42;--ssb-gold-soft:#cfe6d2;--ssb-red:#92262a;--ssb-green:#2e7d42;--ssb-green-2:#37954e;--ssb-line:rgba(20,48,30,.16);--ssb-shadow:0 18px 40px rgba(20,48,30,.10);--ssb-shadow-soft:0 10px 24px rgba(20,48,30,.07);--ssb-radius-xl:28px;--ssb-radius-lg:22px;--ssb-radius-md:16px;display:block;width:100%;padding:18px 0;color:var(--ssb-ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,rgba(46,125,66,.08),transparent 24%),linear-gradient(180deg,#fcfbf6 0%,var(--ssb-bg) 100%)}.ssb__wrap{width:100%;max-width:460px;margin:0 auto;padding:0 10px}.ssb__section{margin-bottom:18px}.ssb__card{background:linear-gradient(180deg,rgba(255,255,255,.98) 0%,rgba(253,252,247,.98) 100%);border:1px solid var(--ssb-line);border-radius:var(--ssb-radius-xl);box-shadow:var(--ssb-shadow);overflow:hidden}.ssb__inner{padding:22px 18px}.ssb__eyebrow{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 16px;border:1.5px solid rgba(46,125,66,.58);border-radius:999px;color:var(--ssb-gold);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;background:rgba(253,252,248,.92)}.ssb__title-xl,.ssb__title-lg,.ssb__title-md,.ssb__title-sm{margin:0;color:var(--ssb-ink);font-weight:800;letter-spacing:-.04em;line-height:.96}.ssb__title-xl{font-size:clamp(42px,12vw,66px)}.ssb__title-lg{font-size:clamp(32px,10vw,48px)}.ssb__title-md{font-size:clamp(25px,7vw,34px)}.ssb__title-sm{font-size:22px;line-height:1.05}.ssb__title-accent,.ssb__accent{color:var(--ssb-gold);font-style:italic}.ssb__text-lg,.ssb__text,.ssb__text-sm{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#5c6b5e}.ssb__text-lg{font-size:18px;line-height:1.65}.ssb__text{font-size:16px;line-height:1.62}.ssb__text-sm{font-size:14px;line-height:1.58}.ssb__stack-8{display:grid;gap:8px}.ssb__stack-12{display:grid;gap:12px}.ssb__stack-16{display:grid;gap:16px}.ssb__stack-20{display:grid;gap:20px}.ssb__stack-24{display:grid;gap:24px}.ssb__hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:linear-gradient(90deg,#90252a 0%,#68171e 100%);color:#fbfaf3;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif}.ssb__hero-top strong{font-size:13px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}.ssb__timer{min-width:76px;min-height:38px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-size:15px;font-weight:800}.ssb__hero-visual{position:relative;min-height:520px;padding:16px 14px 18px 14px;background:linear-gradient(180deg,rgba(8,22,13,.14) 0%,rgba(8,22,13,.52) 42%,rgba(8,22,13,.82) 100%),linear-gradient(135deg,rgba(20,48,30,.32) 0%,rgba(10,26,16,.10) 100%)}.ssb__hero-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 14% 72%,rgba(255,255,255,.09),transparent 7%),radial-gradient(circle at 22% 80%,rgba(255,255,255,.06),transparent 6%),linear-gradient(180deg,rgba(255,255,255,.05),transparent 18%);pointer-events:none}.ssb__hero-badges{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.ssb__hero-badge{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border-radius:999px;color:#f6f5ee;background:rgba(10,26,16,.74);border:1px solid rgba(46,125,66,.55);box-shadow:0 10px 18px rgba(0,0,0,.16);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:800}.ssb__hero-copy{position:absolute;right:18px;bottom:18px;left:18px;z-index:1;text-align:center;display:grid;gap:14px}.ssb__hero-copy .ssb__title-xl,.ssb__hero-copy .ssb__text-lg{color:#fbfaf5}.ssb__hero-copy .ssb__text-lg{font-weight:700}.ssb__hero-bottom{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px 18px 20px 18px;background:#f3f2e8;border-top:1px solid rgba(20,48,30,.10)}.ssb__mini-benefit{display:flex;gap:10px;align-items:center;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#3f5245;font-size:14px;font-weight:800}.ssb__pain-quote{padding:8px 4px;text-align:center}.ssb__pain-quote p{margin:0;color:var(--ssb-ink);font-size:18px;line-height:1.45;font-style:italic;font-weight:800}.ssb__pain-list,.ssb__check-list{display:grid;gap:12px}.ssb__pain-item,.ssb__check-item{display:grid;grid-template-columns:38px 1fr;gap:12px;align-items:center;padding:16px 14px;background:rgba(255,255,255,.92);border:1px solid rgba(20,48,30,.08);border-radius:18px;box-shadow:var(--ssb-shadow-soft)}.ssb__pain-icon,.ssb__check-icon,.ssb__step-num,.ssb__avatar{width:38px;height:38px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:18px;font-weight:800;color:#fff}.ssb__pain-icon{background:linear-gradient(135deg,#a52828 0%,#8a1f21 100%)}.ssb__check-icon{background:linear-gradient(135deg,var(--ssb-green) 0%,var(--ssb-green-2) 100%)}.ssb__step-card{display:grid;grid-template-columns:46px 1fr;gap:14px;padding:18px 16px;border-bottom:1px solid rgba(20,48,30,.08)}.ssb__step-card:last-child{border-bottom:0}.ssb__step-num{width:46px;height:46px;background:linear-gradient(135deg,#2e7d42 0%,#1c5a2d 100%);font-size:18px}.ssb__result-box{padding:22px 18px;background:rgba(255,255,255,.88);border-radius:20px;border:1px solid rgba(20,48,30,.10);box-shadow:var(--ssb-shadow-soft)}.ssb__grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ssb__photo-card{overflow:hidden;border-radius:18px;background:#fff;border:1px solid rgba(20,48,30,.10);box-shadow:var(--ssb-shadow-soft)}.ssb__photo-placeholder{min-height:164px;padding:16px;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(135deg,#dfeadf 0%,#6fae7c 100%);color:#fcfbf5;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:800;line-height:1.5}.ssb__photo-label{padding:10px 12px;background:#2e7d42;color:#fdfcf7;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:800;text-align:center}.ssb__product-box,.ssb__cta-box{padding:20px 18px;background:#fff;border-radius:24px;border:1px solid rgba(20,48,30,.10);box-shadow:var(--ssb-shadow)}.ssb__book-placeholder{min-height:320px;border-radius:22px;border:1px dashed rgba(20,48,30,.22);background:linear-gradient(135deg,#e7e8dc 0%,#f6f5ee 100%);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#66756a;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:15px;font-weight:800;line-height:1.6}.ssb__price-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.ssb__old-price{color:#8a968b;text-decoration:line-through;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:18px;font-weight:700}.ssb__price{color:var(--ssb-ink);font-size:30px;line-height:1;font-weight:800}.ssb__badge-off{min-height:38px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#2e7d42;color:#fdfcf7;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:800}.ssb__cta{width:100%;min-height:62px;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(180deg,#2e7d42 0%,#1c5a2d 100%);color:#fdfcf7;text-decoration:none;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:16px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;box-shadow:0 18px 28px rgba(46,125,66,.18)}.ssb__trust-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;color:#8a968b;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:13px;font-weight:800}.ssb__testimonial{padding:18px 16px;background:#fff;border-radius:20px;border:1px solid rgba(20,48,30,.10);box-shadow:var(--ssb-shadow-soft)}.ssb__testimonial-top{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:start}.ssb__avatar{background:linear-gradient(135deg,#2e7d42 0%,#1c5a2d 100%);font-size:22px}.ssb__avatar--green{background:linear-gradient(135deg,#2e7d42 0%,#1c5a2d 100%)}.ssb__avatar--red{background:linear-gradient(135deg,#a73033 0%,#8f2528 100%)}.ssb__name{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ssb-ink);font-size:22px;font-weight:800}.ssb__meta,.ssb__stars,.ssb__verified{font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif}.ssb__meta{color:#8a968b;font-size:13px;font-weight:700;margin:0}.ssb__stars{color:#d89a22;font-size:16px;font-weight:800;margin:0}.ssb__name a,.ssb__meta a,a[x-apple-data-detectors]{color:inherit !important;text-decoration:none !important}.ssb__quote{margin:0;color:#1f3325;font-size:18px;line-height:1.45;font-style:italic;font-weight:800}.ssb__verified{color:#8a968b;font-size:12px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}.ssb__faq{background:#fff;border:1px solid rgba(20,48,30,.10);border-radius:18px;overflow:hidden;box-shadow:var(--ssb-shadow-soft)}.ssb__faq + .ssb__faq{margin-top:12px}.ssb__faq summary{list-style:none;cursor:pointer;padding:18px 16px;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ssb-ink);font-size:16px;font-weight:800}.ssb__faq summary::-webkit-details-marker{display:none}.ssb__faq p{margin:0;padding:0 16px 18px 16px;color:#5c6b5e;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:14px;line-height:1.58}.ssb__problem-image{min-height:260px;border-radius:22px;overflow:hidden;border:1px solid rgba(20,48,30,.10);box-shadow:var(--ssb-shadow-soft);background:#e2e6da}.ssb__problem-image img{display:block;width:100%;height:100%;min-height:260px;object-fit:cover}.ssb__process-image{min-height:260px;border-radius:22px;overflow:hidden;border:1px solid rgba(20,48,30,.10);box-shadow:var(--ssb-shadow-soft);background:#e2e6da}.ssb__process-image img{display:block;width:100%;height:100%;min-height:260px;object-fit:cover}.ssb__cta{border:0;cursor:pointer}.ssb-guarantee,.ssb-guarantee *{box-sizing:border-box}.ssb-guarantee{--ssb-bg:#fbfaf5;--ssb-card:#fdfcf8;--ssb-ink:#16251a;--ssb-muted:#3f5245;--ssb-line:rgba(20,48,30,0.12);--ssb-gold:#2e7d42;--ssb-green:#2e7d42;width:100%;display:block;padding:22px 0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ssb-ink);background:radial-gradient(circle at top left,rgba(46,125,66,0.08),transparent 28%),linear-gradient(180deg,#fcfbf6 0%,var(--ssb-bg) 100%)}.ssb-guarantee__wrap{width:100%;max-width:460px;margin:0 auto;padding:0 14px}.ssb-guarantee__card{position:relative;overflow:hidden;padding:34px 28px;background:linear-gradient(180deg,rgba(251,250,245,0.98) 0%,rgba(251,250,245,0.98) 100%);border:1px solid var(--ssb-line);border-radius:30px;box-shadow:0 22px 44px rgba(20,48,30,0.08)}.ssb-guarantee__card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 18%,rgba(46,125,66,0.14),transparent 18%),radial-gradient(circle at 88% 22%,rgba(46,125,66,0.10),transparent 18%);pointer-events:none}.ssb-guarantee__inner{position:relative;z-index:1;display:grid;gap:22px}.ssb-guarantee__top{display:grid;gap:14px;text-align:center}.ssb-guarantee__eyebrow{display:inline-flex;align-items:center;justify-content:center;justify-self:center;min-height:40px;padding:0 18px;border-radius:999px;border:1px solid rgba(46,125,66,0.42);background:rgba(251,250,245,0.96);color:#1c5a2d;font-size:13px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase}.ssb-guarantee__title{margin:0;font-size:clamp(34px,5vw,58px);line-height:0.98;letter-spacing:-0.04em;font-weight:800}.ssb-guarantee__accent{color:var(--ssb-gold);font-style:italic}.ssb-guarantee__lead{margin:0;color:var(--ssb-muted);font-size:20px;line-height:1.55;font-weight:500}.ssb-guarantee__box{display:grid;grid-template-columns:112px minmax(0,1fr);gap:20px;align-items:start;padding:24px;background:rgba(255,255,255,0.82);border:1px solid rgba(20,48,30,0.10);border-radius:24px}.ssb-guarantee__seal{width:112px;height:112px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2e7d42 0%,#1c5a2d 100%);color:#fff;text-align:center;box-shadow:0 16px 26px rgba(46,125,66,0.18)}.ssb-guarantee__seal strong{display:block;font-size:34px;line-height:1;font-weight:800}.ssb-guarantee__seal span{display:block;margin-top:4px;font-size:12px;line-height:1.15;font-weight:800;letter-spacing:0.08em;text-transform:uppercase}.ssb-guarantee__copy{display:none}@media (max-width:99999px){.ssb-guarantee{padding:16px 0}.ssb-guarantee__wrap{padding:0 10px}.ssb-guarantee__card{padding:24px 16px;border-radius:24px}.ssb-guarantee__lead{font-size:17px}.ssb-guarantee__box{grid-template-columns:1fr;justify-items:center;text-align:center;padding:18px}.ssb-guarantee__seal{width:96px;height:96px}.ssb-guarantee__seal strong{font-size:30px}}.ssb-offer,.ssb-offer *{box-sizing:border-box}.ssb-offer{--ssb-bg:#fbfaf5;--ssb-card:#fcfbf6;--ssb-ink:#16251a;--ssb-muted:#66756a;--ssb-line:rgba(20,48,30,0.12);--ssb-gold:#2e7d42;--ssb-green:#2e7d42;width:100%;display:block;padding:22px 0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ssb-ink);background:radial-gradient(circle at top left,rgba(46,125,66,0.08),transparent 26%),linear-gradient(180deg,#fcfbf6 0%,var(--ssb-bg) 100%)}.ssb-offer__wrap{width:100%;max-width:460px;margin:0 auto;padding:0 14px}.ssb-offer__card{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:0;background:#f4f4ee;border:1px solid var(--ssb-line);border-radius:30px;overflow:hidden;box-shadow:0 22px 44px rgba(20,48,30,0.08)}.ssb-offer__media{min-height:720px;background:#e8e9e0}.ssb-offer__media img{display:block;width:100%;height:100%;object-fit:cover}.ssb-offer__content{display:flex;flex-direction:column;justify-content:center;padding:46px 42px 42px}.ssb-offer__kicker{margin:0 0 12px;color:#8a968b;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase}.ssb-offer__title{margin:0 0 16px;font-size:clamp(36px,4.8vw,66px);line-height:1.03;letter-spacing:-0.04em;font-weight:800}.ssb-offer__title-accent{color:var(--ssb-gold)}.ssb-offer__price-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:12px}.ssb-offer__old{color:#8a968b;font-size:22px;text-decoration:line-through}.ssb-offer__price{color:var(--ssb-ink);font-size:clamp(34px,4vw,54px);line-height:1;font-weight:800;letter-spacing:-0.04em}.ssb-offer__badge{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 18px;border-radius:999px;background:var(--ssb-gold);color:#fff;font-size:15px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase}.ssb-offer__rating{margin-bottom:28px;color:#f4b400;font-size:28px;letter-spacing:0.08em}.ssb-offer__rating small{color:#66756a;font-size:18px;letter-spacing:0;margin-left:6px}.ssb-offer__cta{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:74px;padding:18px 24px;border:0;border-radius:22px;background:var(--ssb-green);color:#fff;text-decoration:none;text-align:center;font-size:30px;line-height:1.1;font-weight:800;box-shadow:0 18px 34px rgba(46,125,66,0.18);cursor:pointer}.ssb-offer__cta:disabled{opacity:0.8;cursor:wait}.ssb-offer__secure{display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;padding:12px 16px;border-radius:16px;background:rgba(0,161,228,0.08);border:1px solid rgba(0,161,228,0.18);color:#0b5e7f;font-size:15px;font-weight:800;text-align:center;cursor:pointer}.ssb-offer__secure-badge{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px}.ssb-offer__secure-badge img{display:block;width:34px;height:34px;object-fit:contain}.ssb-offer__meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;color:#8a968b;font-size:15px;font-weight:600}.ssb-offer__features{margin:10px 0 0;color:var(--ssb-gold);font-size:14px;font-weight:700;letter-spacing:0.02em}@media (max-width:99999px){.ssb-offer__card{grid-template-columns:1fr}.ssb-offer__media{min-height:420px}.ssb-offer__content{padding:24px 18px 22px}.ssb-offer__title{font-size:44px}.ssb-offer__old{font-size:18px}.ssb-offer__price{font-size:44px}.ssb-offer__cta{min-height:62px;font-size:22px;border-radius:18px}}.ssb-bonus,.ssb-bonus *{box-sizing:border-box}.ssb-bonus{--ssb-bg:#f7f6ef;--ssb-card:#ffffff;--ssb-ink:#16251a;--ssb-muted:#66756a;--ssb-line:rgba(20,48,30,0.12);--ssb-gold:#2e7d42;--ssb-green:#2e7d42;--ssb-shadow:0 20px 42px rgba(20,48,30,0.08);width:100%;display:block;padding:20px 0 8px;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ssb-ink);background:radial-gradient(circle at top left,rgba(46,125,66,0.09),transparent 28%),linear-gradient(180deg,#fcfbf6 0%,var(--ssb-bg) 100%)}.ssb-bonus__wrap{width:100%;max-width:460px;margin:0 auto;padding:0 14px}.ssb-bonus__top{max-width:460px;margin:0 auto 22px;text-align:center}.ssb-bonus__eyebrow{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:10px 18px;border-radius:999px;border:1px solid rgba(46,125,66,0.55);color:#1c5a2d;background:rgba(251,250,245,0.92);font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase}.ssb-bonus__title{margin:14px 0 10px;font-size:clamp(34px,5vw,62px);line-height:0.98;letter-spacing:-0.04em;font-weight:800}.ssb-bonus__title-accent{color:var(--ssb-gold);font-style:italic}.ssb-bonus__lead{margin:0;font-size:clamp(18px,2.2vw,27px);line-height:1.45;font-weight:500;color:var(--ssb-ink)}.ssb-bonus__sub{margin:8px 0 0;font-size:18px;line-height:1.5;color:var(--ssb-muted)}.ssb-bonus__sub strong{color:var(--ssb-ink);font-weight:800}.ssb-bonus__sub s{opacity:0.7}.ssb-bonus__slider{position:relative}.ssb-bonus__viewport{overflow-x:auto;overflow-y:hidden;padding:10px 2px 8px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-behavior:smooth;scrollbar-width:none;touch-action:auto;overscroll-behavior-x:contain;overscroll-behavior-y:auto}.ssb-bonus__viewport::-webkit-scrollbar{display:none}.ssb-bonus__track{display:flex;gap:16px;width:100%}.ssb-bonus__slide{flex:0 0 calc(25% - 12px);min-width:calc(25% - 12px);scroll-snap-align:start;scroll-snap-stop:normal}.ssb-bonus__card{min-width:0;background:var(--ssb-card);border:1px solid var(--ssb-line);border-radius:28px;overflow:hidden;box-shadow:var(--ssb-shadow);height:100%;user-select:none}.ssb-bonus__media{position:relative;aspect-ratio:4 / 5.25;background:linear-gradient(180deg,rgba(10,26,16,0.05),rgba(10,26,16,0.25)),radial-gradient(circle at top,rgba(46,125,66,0.2),transparent 35%),linear-gradient(135deg,#14301e 0%,#1c5a2d 50%,#1f3325 100%);display:flex;align-items:center;justify-content:center;padding:18px}.ssb-bonus__media img{display:block;width:100%;height:100%;object-fit:cover;border-radius:20px;box-shadow:0 18px 34px rgba(8,22,13,0.28)}.ssb-bonus__placeholder{width:72%;height:84%;border-radius:22px;border:1px solid rgba(251,250,245,0.35);background:linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04)),rgba(8,22,13,0.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08),0 18px 34px rgba(8,22,13,0.28);display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;color:#fbfaf3;font-size:18px;line-height:1.35;font-weight:800}.ssb-bonus__placeholder small{display:block;margin-top:8px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.9}.ssb-bonus__body{padding:16px 16px 18px}.ssb-bonus__meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:14px}.ssb-bonus__kicker{color:#1c5a2d;font-weight:800;letter-spacing:0.08em;text-transform:uppercase}.ssb-bonus__value{color:#8a968b;font-weight:700;text-decoration:line-through}.ssb-bonus__name{margin:0 0 8px;font-size:28px;line-height:1.14;font-weight:800;letter-spacing:-0.03em}.ssb-bonus__desc{margin:0 0 14px;font-size:17px;line-height:1.55;color:var(--ssb-muted)}.ssb-bonus__badge{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:8px 14px;border-radius:999px;background:var(--ssb-green);color:#fff;font-size:13px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase}.ssb-bonus__nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px}.ssb-bonus__arrow{position:absolute;top:50%;right:10px;transform:translateY(-50%);z-index:2;width:46px;height:46px;border:1px solid rgba(46,125,66,0.30);border-radius:999px;background:#fdfcf8;color:#1c5a2d;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;cursor:pointer;box-shadow:0 10px 18px rgba(20,48,30,0.08)}.ssb-bonus__arrow:disabled{opacity:0.45;cursor:default}.ssb-bonus__dots{display:flex;align-items:center;justify-content:center;gap:8px}.ssb-bonus__dot{width:10px;height:10px;padding:0;border:0;border-radius:999px;background:rgba(20,48,30,0.2);cursor:pointer}.ssb-bonus__dot.is-active{width:26px;background:var(--ssb-gold)}.ssb-bonus__footer{text-align:center;margin-top:12px;color:#8a968b;font-size:15px;font-weight:600}@media (max-width:1080px){.ssb-bonus__slide{flex-basis:calc(33.333% - 11px);min-width:calc(33.333% - 11px)}}@media (max-width:99999px){.ssb-bonus{padding-top:16px}.ssb-bonus__wrap{padding:0 10px}.ssb-bonus__top{margin-bottom:16px}.ssb-bonus__title{font-size:50px}.ssb-bonus__lead{font-size:18px}.ssb-bonus__sub{font-size:15px}.ssb-bonus__track{gap:12px}.ssb-bonus__slide{flex-basis:100%;min-width:100%}.ssb-bonus__body{padding:14px 14px 16px}.ssb-bonus__name{font-size:24px}.ssb-bonus__desc{font-size:15px}.ssb-bonus__arrow{width:42px;height:42px;right:6px}}.ssb-clientes,.ssb-clientes *{box-sizing:border-box}.ssb-clientes{--ssb-bg:#fbfaf5;--ssb-card:#ffffff;--ssb-ink:#16251a;--ssb-muted:#66756a;--ssb-gold:#2e7d42;--ssb-line:rgba(20,48,30,0.12);width:100%;display:block;padding:22px 0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ssb-ink);background:radial-gradient(circle at top left,rgba(46,125,66,0.09),transparent 26%),linear-gradient(180deg,#fcfbf6 0%,var(--ssb-bg) 100%);overflow:hidden}.ssb-clientes__wrap{width:100%;max-width:460px;margin:0 auto}.ssb-clientes__top{max-width:460px;margin:0 auto 18px;padding:0 14px;text-align:center}.ssb-clientes__eyebrow{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 16px;border-radius:999px;border:1px solid rgba(46,125,66,0.5);background:rgba(251,250,245,0.94);color:#1c5a2d;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase}.ssb-clientes__title{margin:14px 0 10px;font-size:clamp(32px,5vw,58px);line-height:1;letter-spacing:-0.04em;font-weight:800}.ssb-clientes__title-accent{color:var(--ssb-gold)}.ssb-clientes__sub{margin:0;font-size:clamp(16px,2vw,22px);line-height:1.55;color:var(--ssb-muted);font-weight:500}.ssb-clientes__viewport{position:relative;overflow:hidden;width:100%}.ssb-clientes__viewport::before,.ssb-clientes__viewport::after{content:"";position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}.ssb-clientes__viewport::before{left:0;background:linear-gradient(90deg,#fbfaf5 0%,rgba(251,250,245,0) 100%)}.ssb-clientes__viewport::after{right:0;background:linear-gradient(270deg,#fbfaf5 0%,rgba(251,250,245,0) 100%)}.ssb-clientes__track{display:flex;width:max-content;gap:16px;padding:8px 0;animation:ssb-clientes-scroll 71.5s linear infinite}.ssb-clientes__item{flex:0 0 auto;width:min(24vw,290px);min-width:220px;background:var(--ssb-card);border:1px solid var(--ssb-line);border-radius:24px;overflow:hidden;box-shadow:0 18px 40px rgba(20,48,30,0.08)}.ssb-clientes__item img{display:block;width:100%;height:100%;min-height:320px;object-fit:cover}.ssb-clientes__footer{margin-top:14px;padding:0 14px;text-align:center;color:#8a968b;font-size:14px;font-weight:600}@keyframes ssb-clientes-scroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(calc(-50% - 8px),0,0)}}@media (max-width:767px){.ssb-clientes{padding:18px 0}.ssb-clientes__top{margin-bottom:14px;padding:0 10px}.ssb-clientes__title{font-size:42px}.ssb-clientes__sub{font-size:15px}.ssb-clientes__viewport::before,.ssb-clientes__viewport::after{width:28px}.ssb-clientes__track{gap:12px;animation-duration:49.5s}.ssb-clientes__item{width:72vw;min-width:72vw;border-radius:20px}.ssb-clientes__item img{min-height:280px}}html,body{margin:0;padding:0;background:#fbfaf5}body{font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}img{max-width:100%}.ssb__hero-badge{border:1px solid rgba(184,135,43,.55)}.ssb__mini-benefit{justify-content:center;text-align:center;gap:6px}.ssb__hero-copy .ssb__title-accent{color:#9be3a8}.ssb__cta{background:linear-gradient(180deg,#f0843a 0%,#d9661c 100%);color:#fff;box-shadow:0 18px 28px rgba(217,102,28,.25)}.ssb-offer__cta{background:linear-gradient(180deg,#f0843a 0%,#d9661c 100%);color:#fff;box-shadow:0 18px 34px rgba(217,102,28,.28)}.ssb-bonus__media{padding:0;aspect-ratio:4 / 5;background:#14301e}.ssb-bonus__media img{border-radius:0;box-shadow:none}.cp-aviso{margin:0;padding:4px 6px 0;font-size:14px;line-height:1.55;font-weight:500;color:#5c6b5e;text-align:center}.cp-aviso b{color:#16251a;font-weight:700}.cp-vacio{min-height:320px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed #b9c2b5;border-radius:inherit;background:#eef1ea;color:#5c6b5e;font-weight:800;font-size:15px;text-align:center}.cp-vacio small{font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:#8a968b;word-break:break-all}.cp-prueba.ssb__testimonial{outline:2px dashed #d9b96b;outline-offset:3px}@media (max-width:767px){.cp-vacio{min-height:280px}}@media (prefers-reduced-motion:reduce){.ssb-clientes__track{animation-duration:0.01ms!important;animation-iteration-count:1!important}}.ssb-clientes__item img{object-position:center top}.ssb-clientes__item--chat{background:#ece5dd}</style>
+</head>
+<body>
+
+<!-- ===== SECCIÓN 1 · hero ===== -->
+<section class="ssb ssb__section">
+  <div class="ssb__wrap">
+    <div class="ssb__card">
+      <div class="ssb__hero-visual">
+        <img class="ssb__hero-image" src="__IMG_HERO__" alt="Productor con una canasta de gírgolas cosechadas en casa" width="680" height="850" loading="eager" fetchpriority="high" decoding="async">
+        <div class="ssb__hero-overlay"></div>
+
+        <div class="ssb__hero-badges">
+          <span class="ssb__hero-badge">🍄 45 fichas paso a paso</span>
+          <span class="ssb__hero-badge">🎁 5 bonos de regalo</span>
+          <span class="ssb__hero-badge">🛡️ Garantía 15 días</span>
+        </div>
+
+        <div class="ssb__hero-copy">
+          <h1 class="ssb__title-xl" id="hero-h1">Cosechá tus propios <span class="ssb__title-accent">hongos gourmet</span> desde&nbsp;casa.</h1>
+          <p class="ssb__text-lg" id="hero-sub">45 fichas visuales para producir gírgolas en el rincón que ya tenés. Armás, mirás y cosechás.</p>
+        </div>
+        <script>
+        /* título según el anuncio (?ang=). Corre acá mismo para que no parpadee. */
+        (function(){
+          var A={
+            kit:['“No creció nada.” <span class="ssb__title-accent">Esta vez, sí.</span>','El cultivo avisa en colores y en días. Estas 45 fichas te enseñan a leerlo.'],
+            dia14:['Lo tiraste el día 14. <span class="ssb__title-accent">Iba a brotar el 19.</span>','Entre el día 12 y el 25 no pasa nada visible. Esta guía te dice qué mirar cada día.'],
+            semilla:['<span class="ssb__title-accent">Dejá de comprar micelio.</span> Hacelo en tu cocina.','Sin laboratorio. Es lo que ningún vendedor de kits te va a enseñar.'],
+            precio:['Los hongos de <span class="ssb__title-accent">$22.000 el kilo</span>, en tu casa.','En un rincón, con materiales que conseguís cerca. Primera cosecha cerca del día 25.'],
+            renta:['Ocho bolsas dan <span class="ssb__title-accent">un kilo por semana</span>.','El mismo kilo que la verdulería cobra $22.000. Qué hacés con él lo decidís vos.']
+          };
+          var v='';
+          try{ v=new URLSearchParams(location.search).get('ang')||(JSON.parse(localStorage.getItem('cp_trk')||'{}').ang)||''; }catch(e){}
+          var x=A[v]; if(!x) return;
+          document.getElementById('hero-h1').innerHTML=x[0];
+          document.getElementById('hero-sub').textContent=x[1];
+        })();
+        </script>
+      </div>
+
+      <div class="ssb__hero-bottom">
+        <div class="ssb__mini-benefit">📋 45 fichas visuales</div>
+        <div class="ssb__mini-benefit">🎁 5 bonos de regalo</div>
+        <div class="ssb__mini-benefit">⚡ Acceso inmediato</div>
+        <div class="ssb__mini-benefit">✅ Garantía 15 días</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 2 · problema ===== -->
+<section class="ssb ssb__section">
+  <div class="ssb__wrap">
+    <div class="ssb__card">
+      <div class="ssb__inner ssb__stack-20" style="text-align:center;">
+        <div class="ssb__stack-12">
+          <div><span class="ssb__eyebrow">¿Te suena esto?</span></div>
+          <h2 class="ssb__title-lg">Hiciste todo al pie de la letra. Y <span class="ssb__title-accent">no creció nada</span>.</h2>
+          <p class="ssb__text-lg">Lo mirabas todos los días. Regabas, esperabas, volvías a mirar. Y un día apareció una mancha verde, o directamente no apareció nada, y no supiste si tirarlo o seguir esperando. Porque el cultivo te estaba hablando, y nadie te enseñó el idioma.</p>
+        </div>
+
+        <div class="ssb__pain-quote">
+          <p>"No es falta de mano. <span class="ssb__accent">Es que nadie te enseñó a leer el cultivo</span>."</p>
+        </div>
+
+        <div class="ssb__problem-image">
+          <img src="__IMG_PROBLEMA__" alt="Bolsa de cultivo con una mancha de moho verde" width="300" height="300" loading="lazy" decoding="async">
+        </div>
+
+        <div class="ssb__pain-list">
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">Compraste un kit, seguiste las instrucciones al pie de la letra y no creció nada.</div>
+          </div>
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">Viste moho verde al quinto día y no supiste si tirar todo o seguir esperando.</div>
+          </div>
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">Tiraste la bolsa el día 14 sin saber que iba a brotar el 19.</div>
+          </div>
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">Te dio una sola cosecha y después nada, aunque te habían dicho dos o tres.</div>
+          </div>
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">En tu ciudad no conseguís semilla, y el envío sale más caro que el insumo.</div>
+          </div>
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">El video de YouTube sobre contaminación lo encontraste después de contaminarte.</div>
+          </div>
+          <div class="ssb__pain-item">
+            <span class="ssb__pain-icon">x</span>
+            <div class="ssb__text">Pagás $22.000 el kilo de gírgolas en la verdulería sabiendo que se pueden cultivar en casa.</div>
+          </div>
+        </div>
+
+        <div class="ssb__result-box">
+          <h3 class="ssb__title-md">Con el calendario y el semáforo, el cultivo deja de ser suerte. <span class="ssb__accent">Y pasa a ser tuyo</span>.</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 3 · proceso ===== -->
+<section class="ssb ssb__section">
+  <div class="ssb__wrap">
+    <div class="ssb__card">
+      <div class="ssb__inner ssb__stack-20">
+        <div class="ssb__stack-12" style="text-align:center;">
+          <div><span class="ssb__eyebrow">Cómo funciona</span></div>
+          <h2 class="ssb__title-lg">Armá, mirá y <span class="ssb__accent">cosechá</span></h2>
+          <p class="ssb__text-lg">No son consejos sueltos. Es un manual completo: 45 fichas visuales que te llevan de la bolsa a la cosecha: qué comprar, qué mirar cada día y qué hacer si algo cambia de color. Más los cinco bonos que te acompañan el resto del proceso.</p>
+        </div>
+
+        <div class="ssb__process-image">
+          <img src="__IMG_PROCESO__" alt="Fichas del Manual Visual de Cosecha Propia" width="700" height="466" loading="lazy" decoding="async">
+        </div>
+
+        <div class="ssb__card" style="background:#fff; border-radius:22px;">
+          <div class="ssb__step-card">
+            <span class="ssb__step-num">1</span>
+            <div class="ssb__stack-8">
+              <h3 class="ssb__title-sm">Armá tu rincón</h3>
+              <p class="ssb__text">Elegís el lugar (lavadero, pieza vacía o balcón), preparás el sustrato y armás tus primeras bolsas en un día. El Arranque en 24 Horas te dice qué hacer, en orden.</p>
+              <p class="ssb__text" style="display:flex; align-items:flex-start; gap:8px; background:rgba(46,125,66,.08); border:1px solid rgba(46,125,66,.28); border-radius:12px; padding:10px 12px; color:#1c5a2d; font-weight:700;"><span style="flex-shrink:0;">&#128203;</span><span>45 fichas en orden, de la bolsa a la cosecha. Cada una te dice qué mirás, qué hacés y <strong>cuál es el error que arruina esa etapa</strong>.</span></p>
+            </div>
+          </div>
+          <div class="ssb__step-card">
+            <span class="ssb__step-num">2</span>
+            <div class="ssb__stack-8">
+              <h3 class="ssb__title-sm">Seguí el calendario</h3>
+              <p class="ssb__text">Entre el día 12 y el 25 no pasa nada visible, y ahí abandona casi todo el mundo. El Calendario 12-25 te dice qué mirar cada día. <strong>No adivinás nada</strong>.</p>
+            </div>
+          </div>
+          <div class="ssb__step-card">
+            <span class="ssb__step-num">3</span>
+            <div class="ssb__stack-8">
+              <h3 class="ssb__title-sm">Leé los colores</h3>
+              <p class="ssb__text">Si aparece una mancha, el Semáforo del Cultivo te dice qué es, si se salva y qué hacer hoy, para que no tires una bolsa que estaba por brotar.</p>
+            </div>
+          </div>
+          <div class="ssb__step-card">
+            <span class="ssb__step-num">4</span>
+            <div class="ssb__stack-8">
+              <h3 class="ssb__title-sm">Cosechá y repetí</h3>
+              <p class="ssb__text">Cortás en el punto justo, cerca del día 25. Y como el método quedó anotado, <strong>lo volvés a lograr igual</strong>: un bloque bien manejado da dos o tres oleadas.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 4 · garantia ===== -->
+<section class="ssb-guarantee">
+  <div class="ssb-guarantee__wrap">
+    <div class="ssb-guarantee__card">
+      <div class="ssb-guarantee__inner">
+        <div class="ssb-guarantee__top">
+          <span class="ssb-guarantee__eyebrow">Garantía real</span>
+          <h2 class="ssb-guarantee__title">Leé la guía. Si no es para vos, <span class="ssb-guarantee__accent">te devolvemos la plata</span>.</h2>
+          <p class="ssb-guarantee__lead">Abrila, recorré las fichas y armá tu primera bolsa. Si dentro de los primeros 15 días sentís que no es lo que esperabas, nos escribís un mail y te devolvemos el 100%. Sin formularios y sin preguntas.</p>
+        </div>
+
+        <div class="ssb-guarantee__box">
+          <div class="ssb-guarantee__seal">
+            <div>
+              <strong>15</strong>
+              <span>Días de garantía</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 5 · oferta directa ===== -->
+<section class="ssb-offer">
+  <div class="ssb-offer__wrap">
+    <div class="ssb-offer__card">
+      <div class="ssb-offer__media">
+        <img src="__IMG_OFERTA__" alt="El Manual Visual de Cosecha Propia y sus 5 bonos" width="640" height="800" loading="lazy" decoding="async">
+      </div>
+
+      <div class="ssb-offer__content">
+        <p class="ssb-offer__kicker">Manual visual completo</p>
+        <h2 class="ssb-offer__title">El Manual Visual de Cosecha Propia <span class="ssb-offer__title-accent">75% OFF</span></h2>
+
+        <div class="ssb-offer__price-row">
+          <span class="ssb-offer__old">$81.000</span>
+          <span class="ssb-offer__price">$19.900</span>
+          <span class="ssb-offer__badge">75% OFF</span>
+        </div>
+        <div class="ssb-offer__rating" style="font-size:19px; color:#1c5a2d; font-weight:800;">&#128293; Todo junto vale $81.000. Hoy, pago único.</div>
+
+        <button class="ssb-offer__cta" type="button" data-checkout="oferta">Quiero mi guía por&nbsp;$19.900</button>
+        <div class="ssb-offer__secure" data-checkout="oferta-sello">
+          <span class="ssb-offer__secure-badge">🔒</span>
+          <span>Pago 100% seguro</span>
+        </div>
+
+        <div class="ssb-offer__meta">
+          <span>💻 Material digital</span>
+          <span>📩 Llega a tu mail</span>
+        </div>
+        <p class="ssb-offer__features" style="font-size:16px; font-weight:800;"><strong>45 fichas visuales</strong> &middot; <strong>5 bonos de regalo</strong> &middot; Entrega inmediata</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 6 · bonos ===== -->
+<section class="ssb-bonus" id="ssb-bonus-slider">
+  <div class="ssb-bonus__wrap">
+    <div class="ssb-bonus__top">
+      <span class="ssb-bonus__eyebrow">Incluido hoy</span>
+      <h2 class="ssb-bonus__title">&#127873; Y eso no es <span class="ssb-bonus__title-accent">todo</span></h2>
+      <p class="ssb-bonus__lead">Si comprás hoy también te llevás <strong>5 bonos de regalo</strong>: qué significa cada color, qué mirar cada día, cómo arrancar, qué cocinar con tu cosecha y cómo armar sustrato casi gratis.</p>
+      <p class="ssb-bonus__sub">Valor real: <s>$49.000</s> <strong>HOY INCLUIDOS GRATIS</strong></p>
+    </div>
+
+    <div class="ssb-bonus__slider">
+      <div class="ssb-bonus__viewport">
+        <div class="ssb-bonus__track">
+          <div class="ssb-bonus__slide">
+            <article class="ssb-bonus__card">
+              <div class="ssb-bonus__media">
+                <img src="__IMG_BONO_1_SEMAFORO__" alt="Bono El Semáforo del Cultivo" width="480" height="600" loading="lazy" decoding="async">
+              </div>
+              <div class="ssb-bonus__body">
+                <div class="ssb-bonus__meta"><span class="ssb-bonus__kicker">Bono #1</span><span class="ssb-bonus__value">$7.000</span></div>
+                <h3 class="ssb-bonus__name">El Semáforo del Cultivo</h3>
+                <p class="ssb-bonus__desc">Qué significa cada color que aparece en la bolsa, cuál se salva y qué hacer hoy. Para imprimir y colgar al lado del cultivo.</p>
+                <span class="ssb-bonus__badge">Incluido hoy</span>
+              </div>
+            </article>
+          </div>
+          <div class="ssb-bonus__slide">
+            <article class="ssb-bonus__card">
+              <div class="ssb-bonus__media">
+                <img src="__IMG_BONO_2_CALENDARIO__" alt="Bono Calendario 12-25" width="480" height="600" loading="lazy" decoding="async">
+              </div>
+              <div class="ssb-bonus__body">
+                <div class="ssb-bonus__meta"><span class="ssb-bonus__kicker">Bono #2</span><span class="ssb-bonus__value">$7.000</span></div>
+                <h3 class="ssb-bonus__name">Calendario 12-25</h3>
+                <p class="ssb-bonus__desc">Qué mirar cada día del tramo donde no pasa nada, para no tirar una bolsa que estaba por brotar.</p>
+                <span class="ssb-bonus__badge">Incluido hoy</span>
+              </div>
+            </article>
+          </div>
+          <div class="ssb-bonus__slide">
+            <article class="ssb-bonus__card">
+              <div class="ssb-bonus__media">
+                <img src="__IMG_BONO_3_ARRANQUE__" alt="Bono Arranque en 24 Horas" width="480" height="600" loading="lazy" decoding="async">
+              </div>
+              <div class="ssb-bonus__body">
+                <div class="ssb-bonus__meta"><span class="ssb-bonus__kicker">Bono #3</span><span class="ssb-bonus__value">$8.000</span></div>
+                <h3 class="ssb-bonus__name">Arranque en 24 Horas</h3>
+                <p class="ssb-bonus__desc">Todo lo que hacés el primer día, en orden, para arrancar sin dudas.</p>
+                <span class="ssb-bonus__badge">Incluido hoy</span>
+              </div>
+            </article>
+          </div>
+          <div class="ssb-bonus__slide">
+            <article class="ssb-bonus__card">
+              <div class="ssb-bonus__media">
+                <img src="__IMG_BONO_4_RECETAS__" alt="Bono Carta Lucrativa" width="480" height="600" loading="lazy" decoding="async">
+              </div>
+              <div class="ssb-bonus__body">
+                <div class="ssb-bonus__meta"><span class="ssb-bonus__kicker">Bono #4</span><span class="ssb-bonus__value">$15.000</span></div>
+                <h3 class="ssb-bonus__name">Carta Lucrativa</h3>
+                <p class="ssb-bonus__desc">20 recetas gourmet con gírgolas: para el día a día, para lucirte, para guardarlas meses y para venderlas elaboradas.</p>
+                <span class="ssb-bonus__badge">Incluido hoy</span>
+              </div>
+            </article>
+          </div>
+          <div class="ssb-bonus__slide">
+            <article class="ssb-bonus__card">
+              <div class="ssb-bonus__media">
+                <img src="__IMG_BONO_5_SUSTRATO__" alt="Bono Sustrato de Cero" width="480" height="600" loading="lazy" decoding="async">
+              </div>
+              <div class="ssb-bonus__body">
+                <div class="ssb-bonus__meta"><span class="ssb-bonus__kicker">Bono #5</span><span class="ssb-bonus__value">$12.000</span></div>
+                <h3 class="ssb-bonus__name">Sustrato de Cero</h3>
+                <p class="ssb-bonus__desc">Cómo armar tu sustrato con lo que sobra en tu zona, barato o gratis: marlo, cáscara de girasol, yerba, aserrín y más.</p>
+                <span class="ssb-bonus__badge">Incluido hoy</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="ssb-bonus__nav">
+        <button class="ssb-bonus__arrow ssb-bonus__arrow--next" type="button" aria-label="Siguiente bono">&#8250;</button>
+        <div class="ssb-bonus__dots"></div>
+      </div>
+    </div>
+
+    <div class="ssb-bonus__footer">Deslizá para ver todos los bonos &#128073;</div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 7 · resenas =====
+     Prueba social real: capturas de los mensajes que nos mandaron los clientes,
+     publicadas con su permiso. El set duplicado para el loop infinito lo arma solo el script. -->
+<section class="ssb-clientes" aria-label="Cosechas hechas en casa">
+  <div class="ssb-clientes__wrap">
+    <div class="ssb-clientes__top">
+      <span class="ssb-clientes__eyebrow">Resultados reales</span>
+      <h2 class="ssb-clientes__title">Cosechas hechas <span class="ssb-clientes__title-accent">en casa</span></h2>
+      <p class="ssb-clientes__sub">Mensajes y fotos que nos mandaron, publicados con su permiso.</p>
+    </div>
+
+    <div class="ssb-clientes__viewport">
+      <div class="ssb-clientes__track">
+        <figure class="ssb-clientes__item ssb-clientes__item--chat"><img src="__IMG_CHAT_1_NICOLAS__" loading="lazy" alt="Mensaje de Nicolás: &quot;te paso una foto porque no puedo creer lo que salió, esta es la primera tanda que hago solo&quot;, con la foto de su cosecha de gírgolas" decoding="async" width="620" height="1076"></figure>
+        <figure class="ssb-clientes__item ssb-clientes__item--chat"><img src="__IMG_CHAT_2_LUCIANA__" loading="lazy" alt="Mensaje de Luciana: &quot;al final arranqué con las gírgolas, esta fue la primera cosecha que saqué en casa&quot;, con la foto de su canasta llena" decoding="async" width="620" height="1067"></figure>
+        <figure class="ssb-clientes__item ssb-clientes__item--chat"><img src="__IMG_CHAT_3_GUSTAVO__" loading="lazy" alt="Mensaje de Gustavo: &quot;arranqué sin saber prácticamente nada&quot;, con la foto de sus gírgolas listas para cosechar" decoding="async" width="620" height="1093"></figure>
+        <figure class="ssb-clientes__item ssb-clientes__item--chat"><img src="__IMG_CHAT_4_FLORENCIA__" loading="lazy" alt="Mensaje de Florencia: &quot;al final hicimos las gírgolas para comerlas hoy, quedaron buenísimas&quot;, con la foto del plato terminado" decoding="async" width="620" height="1069"></figure>
+        <figure class="ssb-clientes__item ssb-clientes__item--chat"><img src="__IMG_CHAT_5_GRACIELA__" loading="lazy" alt="Mensaje de Graciela: &quot;nunca había cultivado nada en mi vida, ya voy por la segunda oleada&quot;, con la foto de sus dos manojos de gírgolas" decoding="async" width="620" height="1064"></figure>
+      </div>
+    </div>
+
+    <div class="ssb-clientes__footer">Fotos y mensajes reales.</div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 8 · resultados ===== -->
+<section class="ssb ssb__section">
+  <div class="ssb__wrap">
+    <div class="ssb__cta-box ssb__section" style="text-align:center;">
+      <div class="ssb__stack-16">
+        <p class="ssb__text-sm" style="letter-spacing:.14em; text-transform:uppercase; color:var(--ssb-gold); font-weight:800;">Ya tenés el rincón. Ahora tenés el método.</p>
+        <div class="ssb__price-row" style="justify-content:center;">
+          <span class="ssb__old-price">$81.000</span>
+          <span class="ssb__price">$19.900</span>
+          <span class="ssb__badge-off">Oferta</span>
+        </div>
+        <a href="#" class="ssb__cta" data-checkout="resultados">Quiero mi guía 👉</a>
+        <div class="ssb__trust-row">
+          <span>⚡ Acceso inmediato</span>
+          <span>🛡️ Garantía 15 días</span>
+          <span>📩 Llega a tu mail</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reseñas textuales de compradores de la guía. -->
+    <div class="ssb__card" id="cp-testimonios-card">
+      <div class="ssb__inner ssb__stack-20">
+        <div class="ssb__stack-12" style="text-align:center;">
+          <div><span class="ssb__eyebrow">Reseñas verificadas</span></div>
+          <h2 class="ssb__title-lg">Lo que dicen los que ya <span class="ssb__accent">lo aplicaron</span></h2>
+          <p class="ssb__text-lg">Reseñas de compradores de la guía, textuales.</p>
+        </div>
+
+        <div class="ssb__stack-16" id="cp-testimonios">
+          <div class="ssb__testimonial">
+            <div class="ssb__stack-16">
+              <div class="ssb__testimonial-top">
+                <span class="ssb__avatar">M</span>
+                <div class="ssb__stack-8">
+                  <h3 class="ssb__name">Mariana López</h3>
+                  <p class="ssb__meta">Ubicación: Córdoba Capital</p>
+                  <p class="ssb__stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                </div>
+              </div>
+              <p class="ssb__quote">&quot;Pensé que no estaba funcionando porque no veía nada&quot;</p>
+              <p class="ssb__text">Los primeros días miraba la bolsa y no pasaba nada, ya estaba pensando que había hecho algo mal. Con el calendario entendí que había una parte en la que simplemente había que esperar. Después aparecieron las primeras y fue una alegría jajaj. Ahora estoy preparando otra.</p>
+              <p class="ssb__verified">VERIFICADO &middot; SEPTIEMBRE 2026</p>
+            </div>
+          </div>
+          <div class="ssb__testimonial">
+            <div class="ssb__stack-16">
+              <div class="ssb__testimonial-top">
+                <span class="ssb__avatar ssb__avatar--red">J</span>
+                <div class="ssb__stack-8">
+                  <h3 class="ssb__name">Julián Pereyra</h3>
+                  <p class="ssb__meta">Ubicación: Rosario, Santa Fe</p>
+                  <p class="ssb__stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                </div>
+              </div>
+              <p class="ssb__quote">&quot;Esta vez no tiré la bolsa al primer problema&quot;</p>
+              <p class="ssb__text">Antes había probado con un kit y cuando vi una mancha verde lo tiré porque no sabía qué hacer. Acá pude comparar los colores y entender mejor qué estaba pasando. Llegué a cosechar y la verdad que para ser la primera vez quedé bastante conforme.</p>
+              <p class="ssb__verified">VERIFICADO &middot; AGOSTO 2026</p>
+            </div>
+          </div>
+          <div class="ssb__testimonial">
+            <div class="ssb__stack-16">
+              <div class="ssb__testimonial-top">
+                <span class="ssb__avatar">L</span>
+                <div class="ssb__stack-8">
+                  <h3 class="ssb__name">Luciana Sosa</h3>
+                  <p class="ssb__meta">Ubicación: La Plata, Buenos Aires</p>
+                  <p class="ssb__stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                </div>
+              </div>
+              <p class="ssb__quote">&quot;Lo hice en un rincón del lavadero&quot;</p>
+              <p class="ssb__text">No tengo mucho espacio en casa y pensé que necesitaba algo más preparado. Al final armé un rincón en el lavadero y fui siguiendo las fichas. La primera cosecha me sorprendió bastante, sobre todo porque nunca había cultivado hongos. Ya estoy pensando en hacer otra tanda.</p>
+              <p class="ssb__verified">VERIFICADO &middot; AGOSTO 2026</p>
+            </div>
+          </div>
+          <div class="ssb__testimonial">
+            <div class="ssb__stack-16">
+              <div class="ssb__testimonial-top">
+                <span class="ssb__avatar ssb__avatar--red">F</span>
+                <div class="ssb__stack-8">
+                  <h3 class="ssb__name">Federico Acosta</h3>
+                  <p class="ssb__meta">Ubicación: Mendoza</p>
+                  <p class="ssb__stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                </div>
+              </div>
+              <p class="ssb__quote">&quot;Me ayudó a no estar tocando la bolsa todo el tiempo&quot;</p>
+              <p class="ssb__text">Soy bastante ansioso y estaba mirando todos los días a ver si aparecía algo jajaj. El calendario me ayudó a entender cuándo tenía que revisar y cuándo simplemente dejarla tranquila. Salieron las primeras gírgolas y después volvió a brotar. No sabía que podía dar otra tanda.</p>
+              <p class="ssb__verified">VERIFICADO &middot; JULIO 2026</p>
+            </div>
+          </div>
+          <div class="ssb__testimonial">
+            <div class="ssb__stack-16">
+              <div class="ssb__testimonial-top">
+                <span class="ssb__avatar">C</span>
+                <div class="ssb__stack-8">
+                  <h3 class="ssb__name">Carolina Benítez</h3>
+                  <p class="ssb__meta">Ubicación: Neuquén Capital</p>
+                  <p class="ssb__stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                </div>
+              </div>
+              <p class="ssb__quote">&quot;Arranqué sin saber absolutamente nada&quot;</p>
+              <p class="ssb__text">Nunca había cultivado hongos y por eso me daba un poco de cosa empezar. Fui haciendo las cosas de a una con las fichas y tratando de no apurarme. Cuando vi las primeras gírgolas fue tipo no puede ser jajaj. Para ser la primera vez salió bastante bien.</p>
+              <p class="ssb__verified">VERIFICADO &middot; JULIO 2026</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECCIÓN 9 · faq ===== -->
+<section class="ssb ssb__section">
+  <div class="ssb__wrap">
+    <div class="ssb__card">
+      <div class="ssb__inner ssb__stack-20">
+        <div class="ssb__stack-12" style="text-align:center;">
+          <div><span class="ssb__eyebrow">Preguntas frecuentes</span></div>
+          <h2 class="ssb__title-lg">Las preguntas honestas, <span class="ssb__accent">respondidas</span></h2>
+        </div>
+        <div>
+          <details class="ssb__faq">
+            <summary>¿Cómo recibo la guía?</summary>
+            <p>Apenas se aprueba el pago te llega un mail con el acceso. La abrís en el celular, la tablet o la compu, o la imprimís. En un minuto ya la tenés, y es tuya para siempre.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Necesito laboratorio o saber de biología?</summary>
+            <p>No. Cultivar gírgolas no es hacer ciencia: es seguir una ficha. Se pasteuriza con una olla común o con cal, sin fuego, y se siembra en bolsas. Lo único que pide olla a presión es el módulo de semilla a escala, y está marcado para que no te lo encuentres de sorpresa.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Sirve para el clima donde vivo?</summary>
+            <p>La gírgola clásica fructifica entre 13 y 18 grados, y para zonas cálidas existen cepas que aguantan más calor. Adentro están las fichas para acondicionar el rincón que ya tenés y qué hacer cuando afuera hace más frío o más calor.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Necesito campo o un espacio grande?</summary>
+            <p>No. Alcanza con un rincón: un lavadero, una pieza vacía, un balcón o un galpón. Se cultiva en bolsas, frascos, botellas o baldes.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Dónde consigo los materiales?</summary>
+            <p>Cerca de tu casa. El manual arranca en el día cero, con qué comprar y dónde. Y Sustrato de Cero te muestra cómo armar el sustrato con lo que sobra en tu zona: marlo, cáscara de girasol, yerba o aserrín.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Es seguro comer lo que coseche?</summary>
+            <p>Gírgola, shiitake y melena de león son especies comestibles que se siembran a partir de semilla de la propia especie: no se recolectan en el campo. El Semáforo te marca qué señales obligan a descartar una bolsa, y la regla es simple: ante la duda, se descarta.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Me va a salir igual que en las fotos?</summary>
+            <p>Depende de la especie, el clima, los insumos y el manejo. Por eso la guía te enseña a leer lo que pasa en cada etapa: un bloque bien manejado da dos o tres oleadas, y uno contaminado da cero. La mitad del manual es para darte cuenta antes de que pase.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Sirve si nunca cultivé nada?</summary>
+            <p>Sí. El manual arranca en el día cero y no da nada por sabido: cada ficha te dice qué mirás, qué hacés y cuál es el error que arruina esa etapa. Y el Arranque en 24 Horas te ordena el primer día.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Qué incluye exactamente?</summary>
+            <p>El Manual Visual de 45 fichas, de la bolsa a la cosecha, con gírgola, shiitake y melena de león. Además, 5 bonos: el Semáforo del Cultivo, el Calendario 12-25, el Arranque en 24 Horas, la Carta Lucrativa con 20 recetas y Sustrato de Cero. En PDF para el celular y en versión para imprimir.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Es una suscripción?</summary>
+            <p>No. Es un pago único y la guía es tuya para siempre.</p>
+          </details>
+          <details class="ssb__faq">
+            <summary>¿Y si no me sirve?</summary>
+            <p>Tenés 15 días de garantía. Nos escribís un mail y te devolvemos el 100% de tu plata. Sin preguntas.</p>
+          </details>
+        </div>
+        <div class="ssb__cta-box" style="text-align:center;">
+          <div class="ssb__stack-16">
+            <h3 class="ssb__title-md">Ya tenés el rincón. <span class="ssb__accent">Ahora tenés el método</span>.</h3>
+            <p class="ssb__text">Si venís pagando $22.000 el kilo en la verdulería, o ya probaste un kit y no te creció nada, este es el paso que te faltaba.</p>
+            <p class="ssb__text">Cosecha Propia te da las <strong>45 fichas visuales</strong>, qué mirar cada día del tramo donde todos abandonan y qué significa cada color de la bolsa. Más los cinco bonos que te acompañan el resto del proceso.</p>
+            <p class="ssb__text">Hoy tenés la guía completa a <strong>$19.900, pago único</strong>.</p>
+            <div class="ssb__price-row" style="justify-content:center;">
+              <span class="ssb__old-price">$81.000</span>
+              <span class="ssb__price">$19.900</span>
+            </div>
+            <button class="ssb__cta" type="button" data-checkout="faq-final">QUIERO MI GUÍA</button>
+            <div class="ssb__trust-row">
+              <span>⚡ Acceso inmediato</span>
+              <span>🛡️ 15 días de garantía</span>
+            </div>
+          </div>
+        </div>
+        <p class="cp-aviso"><b>Un bloque bien manejado da dos o tres oleadas. Uno contaminado da cero.</b> Por eso la mitad de esta guía es sobre cómo darte cuenta antes de que pase. No te vendemos un ingreso: te vendemos saber leer lo que está pasando. Los resultados varían según la especie, el clima, los insumos y el manejo de cada uno.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slider de bonos (el de la plantilla, sin cambios) -->
+<script>
+(function () {
+  var root = document.getElementById('ssb-bonus-slider');
+  if (!root) return;
+
+  var viewport = root.querySelector('.ssb-bonus__viewport');
+  var slides = Array.prototype.slice.call(root.querySelectorAll('.ssb-bonus__slide'));
+  var dotsWrap = root.querySelector('.ssb-bonus__dots');
+  var nextBtn = root.querySelector('.ssb-bonus__arrow--next');
+  var visible = 1;
+  var pages = 1;
+  var pageWidth = 0;
+  var currentPage = 0;
+
+  function getVisible() {
+    return 1;
+  }
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    for (var i = 0; i < pages; i++) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'ssb-bonus__dot';
+      dot.setAttribute('aria-label', 'Ir al slide ' + (i + 1));
+      dot.addEventListener('click', (function (page) {
+        return function () {
+          scrollToPage(page);
+        };
+      })(i));
+      dotsWrap.appendChild(dot);
+    }
+  }
+
+  function updateDots() {
+    var index = pageWidth ? Math.round(viewport.scrollLeft / pageWidth) : 0;
+    if (index < 0) index = 0;
+    if (index > pages - 1) index = pages - 1;
+    currentPage = index;
+    var dots = dotsWrap.querySelectorAll('.ssb-bonus__dot');
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle('is-active', i === index);
+    }
+  }
+
+  function scrollToPage(page) {
+    if (page < 0) page = 0;
+    if (page > pages - 1) page = pages - 1;
+    currentPage = page;
+    viewport.scrollTo({
+      left: pageWidth * page,
+      behavior: 'smooth'
+    });
+  }
+
+  function getGap() {
+    return 12;
+  }
+
+  function recalc() {
+    visible = getVisible();
+    var slideWidth = slides[0] ? slides[0].getBoundingClientRect().width : 0;
+    pageWidth = (slideWidth + getGap()) * visible;
+    pages = Math.max(1, Math.ceil(slides.length / visible));
+    buildDots();
+    updateDots();
+    if (nextBtn) {
+      nextBtn.disabled = pages <= 1;
+    }
+  }
+
+  viewport.addEventListener('scroll', updateDots, {passive: true});
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function () {
+      var nextPage = currentPage + 1;
+      if (nextPage >= pages) nextPage = 0;
+      scrollToPage(nextPage);
+    });
+  }
+
+  window.addEventListener('resize', recalc);
+  recalc();
+})();
+</script>
+
+<!-- Espacios de prueba social + carrusel infinito -->
+<script>
+(function(){
+  var prueba = /[?&]prueba=1/.test(location.search);
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-slot]'), function(el){
+    if(el.innerHTML.indexOf('PEGAR_') < 0) return;
+    if(!prueba){ el.parentNode.removeChild(el); return; }
+    /* modo prueba: se ve el hueco para saber qué falta */
+    Array.prototype.forEach.call(el.querySelectorAll('img'), function(im){
+      var src = im.getAttribute('src') || '';
+      if(src.indexOf('PEGAR_') !== 0) return;
+      var box = document.createElement('div');
+      box.className = 'cp-vacio';
+      box.innerHTML = '<span>Tu foto real acá</span><small>' + src + '</small>';
+      im.parentNode.replaceChild(box, im);
+    });
+    el.classList.add('cp-prueba');
+  });
+
+  /* carrusel: clona lo que quedó para el loop y ajusta la velocidad al mismo ritmo de la plantilla */
+  var sec = document.querySelector('.ssb-clientes');
+  var track = sec && sec.querySelector('.ssb-clientes__track');
+  if(track){
+    var items = Array.prototype.slice.call(track.children);
+    if(!items.length){ sec.parentNode.removeChild(sec); }
+    else {
+      items.forEach(function(it){
+        var c = it.cloneNode(true);
+        c.setAttribute('aria-hidden', 'true');
+        c.removeAttribute('data-slot');
+        var im = c.querySelector('img'); if(im) im.setAttribute('alt', '');
+        track.appendChild(c);
+      });
+      var total = items.length * 2;
+      var movil = window.matchMedia('(max-width: 767px)').matches;
+      track.style.animationDuration = (total * (movil ? 2.5 : 3.6)).toFixed(1) + 's';
+    }
+  }
+
+  /* testimonios: si no quedó ninguno, se saca la tarjeta (la caja de compra se queda) */
+  var lista = document.getElementById('cp-testimonios');
+  if(lista && !lista.querySelector('.ssb__testimonial')){
+    var card = document.getElementById('cp-testimonios-card');
+    if(card) card.parentNode.removeChild(card);
+  }
+})();
+</script>
+
+<!-- Tracking + checkout: el mismo sistema del quiz. No tocar. -->
+<script>
+(function(){
+  var CFG = window.CONFIG || {};
+
+  /* sid: identifica la visita para cruzar landing con venta en la planilla */
+  var SID = (function(){
+    var k='cp_sid', nuevo='cp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    try{ var v=localStorage.getItem(k); if(!v){ v=nuevo; localStorage.setItem(k,v); } return v; }
+    catch(e){ return nuevo; }
+  })();
+
+  /* atribucion: se guarda en el primer click del anuncio y no se pierde si recarga */
+  var TRK = (function(){
+    var k='cp_trk', campos=['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','ttclid','gclid','ang'];
+    var url=new URLSearchParams(location.search), hoy={}, hayNuevos=false;
+    campos.forEach(function(c){ var v=url.get(c); if(v){ hoy[c]=v; hayNuevos=true; } });
+    var guardado={};
+    try{ guardado=JSON.parse(localStorage.getItem(k)||'{}'); }catch(e){}
+    var fin = hayNuevos ? hoy : guardado;
+    if(hayNuevos){ fin.ts_primer_click=new Date().toISOString();
+      try{ localStorage.setItem(k,JSON.stringify(fin)); }catch(e){} }
+    function cookie(n){ var m=document.cookie.match('(^|;)\\s*'+n+'=([^;]*)'); return m?decodeURIComponent(m[2]):''; }
+    fin.fbp=cookie('_fbp'); fin.fbc=cookie('_fbc');
+    if(!fin.fbc && fin.fbclid){ fin.fbc='fb.1.'+Date.now()+'.'+fin.fbclid; }
+    return fin;
+  })();
+
+  var ANG = TRK.ang || '';
+  function eid(n){ return SID+'_'+n+'_'+Date.now().toString(36); }
+  function track(kind,name,data){ try{ if(window.fbq) fbq(kind,name,data||{},{eventID:eid(name)}); }catch(e){} }
+
+  /* planilla de Google: mismas columnas que el quiz, las del quiz van vacias */
+  function save(evento, urgente){
+    try{ if(window.clarity){ clarity('event',evento); clarity('set','sid',SID);
+      if(TRK.utm_content) clarity('set','anuncio',TRK.utm_content); } }catch(e){}
+    if(!CFG.SHEET_WEBHOOK) return;
+    var body = JSON.stringify({
+      sid:SID, evento:evento, ts:new Date().toISOString(),
+      paso:'landing', url:location.href, ref:document.referrer||'',
+      fbp:TRK.fbp||'', fbc:TRK.fbc||'', ts_primer_click:TRK.ts_primer_click||'',
+      p1:'', p2:'', p3:'', p4:'', p5:'', p6:'', p7:'',
+      whatsapp:'', resultado:'landing', vio_video:0,
+      utm_source:TRK.utm_source||'', utm_medium:TRK.utm_medium||'',
+      utm_campaign:TRK.utm_campaign||'', utm_content:TRK.utm_content||'',
+      utm_term:TRK.utm_term||'', fbclid:TRK.fbclid||'',
+      angulo:ANG||'landing'
+    });
+    if(urgente){ try{ if(navigator.sendBeacon && navigator.sendBeacon(CFG.SHEET_WEBHOOK, body)) return; }catch(e){} }
+    try{ fetch(CFG.SHEET_WEBHOOK,{method:'POST',mode:'no-cors',body:body})['catch'](function(){}); return; }catch(e){}
+    try{ if(navigator.sendBeacon) navigator.sendBeacon(CFG.SHEET_WEBHOOK, body); }catch(e){}
+  }
+
+  /* link al checkout con todo lo que hace falta para atribuir la venta */
+  function destino(seccion){
+    var u = new URL(CFG.CHECKOUT_URL, location.href);
+    u.searchParams.set('sid', SID);
+    u.searchParams.set('r', 'landing');
+    if(ANG) u.searchParams.set('ang', ANG);
+    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term',
+     'fbclid','ttclid','gclid','fbp','fbc'].forEach(function(k){
+      if(TRK[k]) u.searchParams.set(k, TRK[k]);
+    });
+    return u.toString();
+  }
+
+  track('track','ViewContent',{content_name:CFG.PRODUCTO, content_category:'landing', value:CFG.VALOR, currency:CFG.MONEDA});
+  save('landing_vista');
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-checkout]') : null;
+    if(!b) return;
+    e.preventDefault();
+    if(b.getAttribute('data-enviando')) return;
+    b.setAttribute('data-enviando','1');
+    var seccion = b.getAttribute('data-checkout') || '';
+    track('trackCustom','ClickCheckout',{content_name:CFG.PRODUCTO, value:CFG.VALOR, currency:CFG.MONEDA, seccion:seccion});
+    save('landing_click_checkout', true);
+    if(b.tagName==='BUTTON' || b.tagName==='A'){ b.setAttribute('data-txt', b.innerHTML); b.textContent='Redirigiendo…'; }
+    setTimeout(function(){ location.href = destino(seccion); }, 120);
+  });
+
+  /* si vuelve con el boton "atras", los botones quedan como estaban */
+  window.addEventListener('pageshow', function(){
+    Array.prototype.forEach.call(document.querySelectorAll('[data-enviando]'), function(b){
+      if(b.getAttribute('data-txt')) b.innerHTML = b.getAttribute('data-txt');
+      b.removeAttribute('data-enviando');
+    });
+  });
+})();
+</script>
+</body>
+</html>
