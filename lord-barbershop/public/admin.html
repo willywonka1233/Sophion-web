@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A09">
+<meta name="robots" content="noindex">
+<title>Panel del barbero · Lord</title>
+<link rel="icon" type="image/png" href="/assets/img/favicon-64.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lord.css">
+<link rel="stylesheet" href="/assets/app.css">
+<link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body class="app admin">
+
+<header class="app-top adm-top">
+  <a href="/" class="brand" aria-label="Ir a la web">
+    <img src="/assets/img/emblem.png" alt="" width="24" height="31">
+    <b>LORD</b><span class="adm-badge">Panel</span>
+  </a>
+  <nav class="adm-tabs" id="admTabs" role="tablist" aria-label="Secciones del panel" hidden>
+    <button role="tab" data-tab="agenda" aria-selected="true">Agenda</button>
+    <button role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
+    <button role="tab" data-tab="nfc" aria-selected="false">NFC</button>
+    <button role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+  </nav>
+  <button class="btn btn-ghost" id="admLogout" hidden>Salir</button>
+</header>
+
+<main class="adm-main">
+  <!-- login -->
+  <section class="view adm-login" id="vLogin" hidden>
+    <img src="/assets/img/logo.png" alt="Lord" width="130" height="130">
+    <h1 class="display">Panel del barbero</h1>
+    <form class="card auth-card" id="loginForm">
+      <div class="field">
+        <label for="admPin">PIN del local</label>
+        <input class="input" id="admPin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••">
+      </div>
+      <p class="error-msg" id="loginErr" role="alert"></p>
+      <button class="btn btn-gold btn-block" type="submit">Entrar</button>
+    </form>
+  </section>
+
+  <section class="view" id="vPanel" hidden>
+    <div class="tab-panel" id="tab-agenda"></div>
+    <div class="tab-panel" id="tab-clientes" hidden></div>
+    <div class="tab-panel" id="tab-nfc" hidden></div>
+    <div class="tab-panel" id="tab-ajustes" hidden></div>
+  </section>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="modal-box" id="modalBox"></div></div>
+
+<div class="qr-full" id="qrFull" hidden>
+  <div class="qr-full-box">
+    <div id="qrFullCode"></div>
+    <p>Escaneá con la cámara para sumar tu corte</p>
+    <button class="btn btn-line" id="qrFullClose">Cerrar</button>
+  </div>
+</div>
+
+<script type="module" src="/assets/admin.js"></script>
+</body>
+</html>

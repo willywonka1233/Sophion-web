@@ -1,0 +1,16 @@
+{
+  "name": "lord-barbershop",
+  "private": true,
+  "type": "module",
+  "description": "Lord Barber Shop · Coffee — web, cuentas de clientes, turnero y validación de cortes por NFC",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test test/api.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.1"
+  }
+}
