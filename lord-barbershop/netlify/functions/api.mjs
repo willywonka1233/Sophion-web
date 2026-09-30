@@ -1,5 +1,6 @@
 // API de Lord Barber Shop · Coffee — una sola función que atiende /api/*
 import { randomBytes } from 'node:crypto';
+import { QR_SERVICE } from '../../public/assets/config.mjs';
 import { store, update, getJSON } from '../../server/db.mjs';
 import {
   HttpError, signToken, readToken, bearer, hashPin, checkPin, safeEqual,
@@ -79,7 +80,28 @@ async function getCards() {
   if (cur) return cur;
   return update('meta', 'cards', (c) => (c ? undefined : defaultCards()));
 }
-const cardView = (req, c) => ({ ...c, link: `${new URL(req.url).origin}/t/${c.code}` });
+// link: el de validación de Lord (/t/CODIGO). qr: lo que va impreso en el QR y grabado en el NFC
+// (el link de qrlocal si se cargó uno; si no, el de Lord). printCode: el código que se imprime.
+function cardView(req, c) {
+  const link = `${new URL(req.url).origin}/t/${c.code}`;
+  let printCode = c.code;
+  if (c.extUrl) {
+    const seg = new URL(c.extUrl).pathname.split('/').filter(Boolean).pop();
+    if (seg) { try { printCode = decodeURIComponent(seg); } catch { printCode = seg; } }
+  }
+  return { ...c, link, qr: c.extUrl || link, printCode };
+}
+
+// Acepta el link completo de qrlocal (u otro servicio https) o solo el código ("lrd1").
+function parseExtUrl(v) {
+  const raw = String(v ?? '').trim();
+  if (!raw) return '';
+  const url = /^[a-z0-9_-]{2,40}$/i.test(raw) ? QR_SERVICE + raw : raw;
+  if (!/^https:\/\/[^\s/]+\/\S+$/i.test(url) || url.length > 300) {
+    throw new HttpError(400, `Pegá el código de qrlocal (ej: lrd1) o el link completo (ej: ${QR_SERVICE}lrd1).`);
+  }
+  return url;
+}
 
 async function shortLink(code) {
   const card = (await getCards()).find((x) => x.code === code);
@@ -558,6 +580,7 @@ const routes = {
       if (b.name !== undefined) c.name = String(b.name).trim().slice(0, 40) || c.name;
       if (b.variant !== undefined) c.variant = b.variant === 'oscura' ? 'oscura' : 'clara';
       if (b.active !== undefined) c.active = !!b.active;
+      if (b.extUrl !== undefined) c.extUrl = parseExtUrl(b.extUrl);
       if (b.target === 'url') {
         const url = String(b.url || '').trim();
         if (!/^https:\/\/\S+$/i.test(url) || url.length > 500) throw new HttpError(400, 'Poné un link que empiece con https://');

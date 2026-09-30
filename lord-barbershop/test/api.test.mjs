@@ -226,6 +226,18 @@ test('tarjetas con código propio: link corto, validación y cambio de destino',
   await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: oscura.code, target: 'validate' } });
   assert.equal((await call('POST', '/validate', { token: t, body: { c: oscura.code } })).status, 200);
 
+  // código de qrlocal: el QR impreso apunta ahí y se imprime ese código
+  const ext = await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: clara.code, extUrl: 'LRD1' } });
+  const ce = ext.data.cards.find((c) => c.code === clara.code);
+  assert.equal(ce.qr, 'https://qrlocal.vercel.app/LRD1');
+  assert.equal(ce.printCode, 'LRD1');
+  assert.equal(ce.link, `https://lord.test/t/${clara.code}`);
+  assert.equal((await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: clara.code, extUrl: 'ftp://x' } })).status, 400);
+  const full = await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: clara.code, extUrl: 'https://qrlocal.vercel.app/lord-2' } });
+  assert.equal(full.data.cards.find((c) => c.code === clara.code).printCode, 'lord-2');
+  const cleared = await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: clara.code, extUrl: '' } });
+  assert.equal(cleared.data.cards.find((c) => c.code === clara.code).qr, `https://lord.test/t/${clara.code}`);
+
   // desactivar, crear con código propio y borrar
   await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: clara.code, active: false } });
   assert.equal((await call('POST', '/validate', { token: t, body: { c: clara.code } })).status, 403);

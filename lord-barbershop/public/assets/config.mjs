@@ -67,6 +67,10 @@ export const DEFAULTS = {
   },
 };
 
+// Sistema de stickers/QR dinámicos donde se crean los códigos de las tarjetas (como "cen3").
+// En cada tarjeta se puede pegar su código de ahí; el QR impreso apunta a QR_SERVICE + código.
+export const QR_SERVICE = 'https://qrlocal.vercel.app/';
+
 // Argentina no tiene horario de verano: UTC-3 todo el año.
 export const UTC_OFFSET = '-03:00';
 

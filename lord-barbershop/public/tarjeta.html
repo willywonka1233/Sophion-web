@@ -119,7 +119,7 @@
 </div>
 <p class="help" id="help" hidden>
   Tamaño tarjeta de crédito, horizontal (85,6 × 54 mm). Cada tarjeta tiene <b>su propio código</b> (va impreso abajo a la derecha)
-  y su QR lleva a <b>tuweb/t/CÓDIGO</b>. A dónde lleva se cambia en el panel (<b>NFC → Tarjetas</b>) sin reimprimir.
+  y su QR lleva al link de esa tarjeta (el de <b>qrlocal</b> si le cargaste un código, o el propio de Lord). El destino se cambia sin reimprimir.
   Con <b>Descargar imágenes</b> bajás cada tarjeta en PNG, en archivos separados.
   Para el NFC: pedí en una gráfica <b>tarjetas PVC NFC (NTAG215)</b> con este diseño y grabales el link de cada tarjeta desde el panel,
   o imprimila en cartulina y pegá un <b>sticker NFC redondo</b> atrás del círculo punteado.
@@ -183,24 +183,24 @@
           </div>
           <div class="panels">
             <div class="panel"><div class="nfc">${WAVE_L}${WAVE_R}</div><small class="lbl">APOYÁ</small></div>
-            <div class="panel"><div class="qr">${qrFor(c.link)}</div><small class="lbl">O ESCANEÁ</small></div>
+            <div class="panel"><div class="qr">${qrFor(c.qr)}</div><small class="lbl">O ESCANEÁ</small></div>
           </div>
         </div>
         <div class="band"><span>BARBER LORD</span><i></i><span>${esc(city)}</span></div>
-        <span class="code">${esc(c.code)}</span>
+        <span class="code">${esc(c.printCode)}</span>
       </div>`;
 
     const dark = (c) => `
       <div class="card dark">
         <div class="top"><img src="/assets/img/logo.png" alt="Lord"><div><b>BARBER LORD</b><b>TARJETA DE FIDELIDAD</b></div></div>
-        <span class="code">${esc(c.code)}</span>
+        <span class="code">${esc(c.printCode)}</span>
         <div class="text">
           <h1>Tu corte<span>suma premios</span></h1>
           <div class="bar"></div>
           <p class="sub">Validalo al terminar</p>
         </div>
         <div class="codes">
-          <div><div class="qr">${qrFor(c.link)}</div><small class="lbl">ESCANEÁ</small></div>
+          <div><div class="qr">${qrFor(c.qr)}</div><small class="lbl">ESCANEÁ</small></div>
           <div class="right"><div class="crowns">${CROWN.repeat(5)}</div><div class="nfc">${WAVE_L}${WAVE_R}</div><small class="lbl">APOYÁ EL CELU</small></div>
         </div>
       </div>`;
@@ -214,7 +214,7 @@
     const note = (c) => [!c.active && 'desactivada', c.target === 'url' && 'hoy lleva a otro link'].filter(Boolean).join(' · ');
 
     document.getElementById('pick').insertAdjacentHTML('beforeend',
-      `<button data-c="todas">Todas</button>${cards.map((c) => `<button data-c="${esc(c.code)}">${esc(c.name)} · ${esc(c.code)}</button>`).join('')}`);
+      `<button data-c="todas">Todas</button>${cards.map((c) => `<button data-c="${esc(c.code)}">${esc(c.name)} · ${esc(c.printCode)}</button>`).join('')}`);
 
     function render() {
       document.querySelectorAll('[data-c]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.c === sel)));
@@ -224,7 +224,7 @@
       const rule = document.getElementById('pageRule');
       if (format === 'imprenta') {
         rule.textContent = '@page{size:85.6mm 54mm;margin:0} @media print{.sheet{display:block}.slot{break-after:page}}';
-        sheet.innerHTML = list.map((c) => `<figure class="slot">${cardHtml(c)}<figcaption>${esc(c.name)} · código ${esc(c.code)}${note(c) ? ` · ${note(c)}` : ''}</figcaption></figure>`).join('');
+        sheet.innerHTML = list.map((c) => `<figure class="slot">${cardHtml(c)}<figcaption>${esc(c.name)} · código ${esc(c.printCode)}${note(c) ? ` · ${note(c)}` : ''}</figcaption></figure>`).join('');
       } else {
         // 10 por hoja A4 (2 × 5) con línea de corte
         rule.textContent = '@page{size:A4;margin:7mm} @media print{.sheet{gap:2.5mm!important;padding:0!important;width:174mm;margin:0 auto}.card{outline:.1mm dashed #999;outline-offset:.8mm}}';
@@ -252,7 +252,7 @@
           const url = await h2i.toPng(nodes[i], { pixelRatio: 4, cacheBust: true });
           const a = document.createElement('a');
           a.href = url;
-          a.download = `tarjeta-lord-${list[i].variant}-${list[i].code}.png`;
+          a.download = `tarjeta-lord-${list[i].variant}-${list[i].printCode}.png`;
           document.body.append(a);
           a.click();
           a.remove();

@@ -1,5 +1,5 @@
 import { api, store, esc, money, dur, todayAR, addDays, relDay, fmtDay, fmtTs, fmtTsDate, waLink, toast, CROWN } from './app.js';
-import { DAY_NAMES } from './config.mjs';
+import { DAY_NAMES, QR_SERVICE } from './config.mjs';
 
 const $ = (id) => document.getElementById(id);
 let token = store.get('lord.admin');
@@ -432,34 +432,57 @@ const VARIANT = { clara: 'Clara', oscura: 'Oscura' };
 
 function cardHtml(c, canWrite) {
   const other = c.variant === 'clara' ? 'oscura' : 'clara';
+  const extVal = c.extUrl ? (c.extUrl.startsWith(QR_SERVICE) ? c.printCode : c.extUrl) : '';
+  const k = esc(c.code);
   return `<article class="panel stack card-row ${c.active ? '' : 'off'}">
     <div class="cr-head">
       <div><b>${esc(c.name)}</b>
-        <small>Código <code>${esc(c.code)}</code> · diseño ${VARIANT[c.variant]} · ${c.uses || 0} validaciones${c.lastUsedAt ? ` · última ${esc(fmtTs(c.lastUsedAt))}` : ''}</small></div>
+        <small>Código impreso <code>${esc(c.printCode)}</code> · diseño ${VARIANT[c.variant]} · ${c.uses || 0} validaciones${c.lastUsedAt ? ` · última ${esc(fmtTs(c.lastUsedAt))}` : ''}</small></div>
       ${c.active ? '<span class="pill ok">Activa</span>' : '<span class="pill dim">Desactivada</span>'}
     </div>
-    <div class="url-box"><span>${esc(c.link)}</span><button class="btn btn-line btn-sm" data-copy="${esc(c.code)}">Copiar</button></div>
+
     <div class="field">
-      <label for="tg-${esc(c.code)}">A dónde lleva el QR y el NFC</label>
-      <select class="select" id="tg-${esc(c.code)}" data-target="${esc(c.code)}">
+      <label for="ext-${k}">Código de qrlocal</label>
+      <div class="inline">
+        <input class="input" id="ext-${k}" data-ext="${k}" placeholder="Ej: lrd1" value="${esc(extVal)}" autocapitalize="none" autocomplete="off">
+        <button class="btn btn-line btn-sm" data-saveext="${k}" style="--h:52px">Guardar</button>
+      </div>
+      <p class="hint">Creá un sticker nuevo en <a href="${esc(QR_SERVICE)}admin" target="_blank" rel="noopener" style="color:var(--gold-hi)">qrlocal</a> (uno distinto por tarjeta, no cen3) y pegá su código acá. Vacío = usa el link propio de Lord.</p>
+    </div>
+
+    ${c.extUrl ? `<div class="field">
+      <span class="label">Destino para configurar en qrlocal (código ${esc(c.printCode)})</span>
+      <div class="url-box"><span>${esc(c.link)}</span><button class="btn btn-gold btn-sm" data-copydest="${k}">Copiar</button></div>
+      <p class="hint">En el panel de qrlocal, poné este link como destino de <b>${esc(c.printCode)}</b>. Así el QR y el NFC validan el corte.</p>
+    </div>` : ''}
+
+    <div class="field">
+      <span class="label">Link impreso en el QR y grabado en el NFC</span>
+      <div class="url-box"><span>${esc(c.qr)}</span><button class="btn btn-line btn-sm" data-copy="${k}">Copiar</button></div>
+    </div>
+
+    <div class="field">
+      <label for="tg-${k}">Qué hace el link de Lord</label>
+      <select class="select" id="tg-${k}" data-target="${k}">
         <option value="validate" ${c.target === 'validate' ? 'selected' : ''}>Validar el corte (Club Lord)</option>
-        <option value="url" ${c.target === 'url' ? 'selected' : ''}>Otro link (reseñas, Instagram…)</option>
+        <option value="url" ${c.target === 'url' ? 'selected' : ''}>Llevar a otro link (reseñas, Instagram…)</option>
       </select>
-      <div class="inline" data-urlrow="${esc(c.code)}" ${c.target === 'url' ? '' : 'hidden'}>
-        <input class="input" data-url="${esc(c.code)}" type="url" placeholder="https://…" value="${esc(c.url || '')}">
-        <button class="btn btn-line btn-sm" data-saveurl="${esc(c.code)}" style="--h:52px">Guardar</button>
+      <div class="inline" data-urlrow="${k}" ${c.target === 'url' ? '' : 'hidden'}>
+        <input class="input" data-url="${k}" type="url" placeholder="https://…" value="${esc(c.url || '')}">
+        <button class="btn btn-line btn-sm" data-saveurl="${k}" style="--h:52px">Guardar</button>
       </div>
     </div>
+
     <div class="cd-grid">
       <a class="btn btn-gold" href="/tarjeta?code=${encodeURIComponent(c.code)}" target="_blank" rel="noopener">Imprimir / PNG</a>
-      <button class="btn btn-line" data-qr="${esc(c.code)}">QR en pantalla</button>
-      ${canWrite ? `<button class="btn btn-line" data-write="${esc(c.code)}">Grabar NFC</button>` : ''}
-      <button class="btn btn-line" data-toggle="${esc(c.code)}">${c.active ? 'Desactivar' : 'Activar'}</button>
-      <button class="btn btn-ghost" data-rename="${esc(c.code)}">Renombrar</button>
-      <button class="btn btn-ghost" data-variant="${esc(c.code)}" data-to="${other}">Pasar a diseño ${VARIANT[other].toLowerCase()}</button>
-      <button class="btn btn-ghost" data-delcard="${esc(c.code)}">Borrar</button>
+      <button class="btn btn-line" data-qr="${k}">QR en pantalla</button>
+      ${canWrite ? `<button class="btn btn-line" data-write="${k}">Grabar NFC</button>` : ''}
+      <button class="btn btn-line" data-toggle="${k}">${c.active ? 'Desactivar' : 'Activar'}</button>
+      <button class="btn btn-ghost" data-rename="${k}">Renombrar</button>
+      <button class="btn btn-ghost" data-variant="${k}" data-to="${other}">Pasar a diseño ${VARIANT[other].toLowerCase()}</button>
+      <button class="btn btn-ghost" data-delcard="${k}">Borrar</button>
     </div>
-    <p class="nfc-status" data-status="${esc(c.code)}" role="status"></p>
+    <p class="nfc-status" data-status="${k}" role="status"></p>
   </article>`;
 }
 
@@ -475,7 +498,7 @@ async function renderNfc() {
   const canWrite = 'NDEFReader' in window;
   $('tab-nfc').innerHTML = `
     <div class="adm-head"><h1>Tarjetas y NFC</h1><button class="btn btn-gold btn-sm" id="newCard">+ Nueva tarjeta</button></div>
-    <p class="muted" style="margin:-6px 0 16px;max-width:760px">Cada tarjeta tiene su <b>código propio</b> (va impreso en la tarjeta). Su QR y su NFC llevan a <b>tuweb/t/CÓDIGO</b>, y desde acá elegís a dónde lleva sin tener que reimprimirla.</p>
+    <p class="muted" style="margin:-6px 0 16px;max-width:780px">Cada tarjeta lleva impreso <b>su propio código</b>. Si le cargás un código de <b>qrlocal</b>, el QR y el NFC apuntan a qrlocal y ahí elegís el destino (el link de validación de Lord que te damos acá). Sin código de qrlocal, usan el link propio de Lord.</p>
     <div class="cards-grid">${cards.map((c) => cardHtml(c, canWrite)).join('') || '<div class="empty">No hay tarjetas.</div>'}</div>
 
     <div class="nfc-grid" style="margin-top:18px">
@@ -486,7 +509,7 @@ async function renderNfc() {
           <ol class="tips">
             <li>Bajá la app gratis <b>NFC Tools</b>.</li>
             <li>Tocá <b>Escribir → Agregar un registro → URL/URI</b>.</li>
-            <li>Pegá el link de la tarjeta (botón <b>Copiar</b>), tocá <b>Escribir</b> y acercá el chip.</li>
+            <li>Pegá el <b>link impreso en el QR</b> de la tarjeta (botón <b>Copiar</b>), tocá <b>Escribir</b> y acercá el chip.</li>
           </ol>
         </div>
         <div class="panel stack">
@@ -570,10 +593,10 @@ $('tab-nfc').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
   const d = btn.dataset;
-  const card = cards.find((c) => c.code === (d.copy || d.qr || d.write || d.toggle || d.rename || d.variant || d.delcard || d.saveurl));
+  const card = cards.find((c) => c.code === (d.copy || d.copydest || d.qr || d.write || d.toggle || d.rename || d.variant || d.delcard || d.saveurl || d.saveext));
   if (btn.id === 'newCard') return newCardModal();
-  if (btn.id === 'copyUrl' || d.copy) {
-    const text = btn.id === 'copyUrl' ? nfc.url : card.link;
+  if (btn.id === 'copyUrl' || d.copy || d.copydest) {
+    const text = btn.id === 'copyUrl' ? nfc.url : d.copydest ? card.link : card.qr;
     try { await navigator.clipboard.writeText(text); toast('Link copiado.', 'ok'); } catch { toast('No se pudo copiar. Seleccionalo a mano.', 'bad'); }
     return;
   }
@@ -585,7 +608,7 @@ $('tab-nfc').addEventListener('click', async (e) => {
   if (!card) return;
   if (d.qr) {
     try {
-      $('qrFullCode').innerHTML = await qrSvg(card.link);
+      $('qrFullCode').innerHTML = await qrSvg(card.qr);
       $('qrFull').hidden = false;
     } catch (err) { toast(err.message, 'bad'); }
   } else if (d.write) {
@@ -593,12 +616,17 @@ $('tab-nfc').addEventListener('click', async (e) => {
     try {
       const ndef = new window.NDEFReader();
       st.textContent = 'Acercá el chip a la parte de atrás del celu…';
-      await ndef.write({ records: [{ recordType: 'url', data: card.link }] });
+      await ndef.write({ records: [{ recordType: 'url', data: card.qr }] });
       st.textContent = '✓ NFC grabado. Probalo apoyando cualquier celu.';
       toast('NFC grabado.', 'ok');
     } catch (err) {
       st.textContent = err.name === 'NotAllowedError' ? 'Tenés que permitir el acceso a NFC.' : `No se pudo grabar: ${err.message}`;
     }
+  } else if (d.saveext) {
+    const v = $('tab-nfc').querySelector(`[data-ext="${CSS.escape(card.code)}"]`).value.trim();
+    const other = v && cards.find((c) => c.code !== card.code && (c.printCode === v || c.extUrl === v || c.extUrl === QR_SERVICE + v));
+    if (other && !confirm(`"${other.name}" ya usa ese código. Cada tarjeta tiene que tener uno distinto. ¿Guardar igual?`)) return;
+    cardAction({ action: 'update', code: card.code, extUrl: v }, v ? 'Código de qrlocal guardado. Ahora configurá su destino en qrlocal.' : 'La tarjeta vuelve a usar el link propio de Lord.');
   } else if (d.saveurl) {
     const url = $('tab-nfc').querySelector(`[data-url="${CSS.escape(card.code)}"]`).value.trim();
     cardAction({ action: 'update', code: card.code, target: 'url', url }, 'Listo: la tarjeta ahora lleva a ese link.');

@@ -32,6 +32,7 @@ Todo corre en Netlify: páginas estáticas + una Netlify Function (`/api/*`) + N
    - **Imprimir / PNG** abre la tarjeta lista para imprimir (85,6 × 54 mm, una por página o 10 por A4) o para **descargar en PNG**, un archivo por tarjeta, con su QR y su código impreso.
    - **Grabar NFC** (Android + Chrome) graba el link de la tarjeta en el chip. Desde iPhone: app **NFC Tools → Escribir → Agregar registro → URL** y pegar el link (botón **Copiar**).
    - Sirve cualquier chip **NTAG213/215/216**. Para la tarjeta física: pedí en una gráfica **tarjetas PVC NFC (NTAG215)** con el diseño, o imprimila en cartulina y pegá un sticker NFC atrás del círculo punteado.
+   - **Con qrlocal** (`https://qrlocal.vercel.app`, el sistema de stickers donde está `cen3`): creá un código nuevo por tarjeta en qrlocal y pegalo en **Código de qrlocal**. La tarjeta imprime ese código y su QR/NFC apuntan a `qrlocal.vercel.app/CÓDIGO`. Después, en qrlocal, poné como destino de ese código el link que muestra el panel en **Destino para configurar en qrlocal** (`https://TU-SITIO/t/…`). Así el destino se puede cambiar desde qrlocal cuando quieras.
    - Se pueden crear más tarjetas (**+ Nueva tarjeta**), renombrarlas, cambiarles el diseño, desactivarlas o borrarlas.
 4. Para mostrar el QR de una tarjeta en el celu del barbero: **QR en pantalla**.
 
