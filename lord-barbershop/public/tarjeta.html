@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="/assets/img/favicon-64.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Jost:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,600;1,700&display=swap" rel="stylesheet">
+<link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Anton&family=Jost:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,600;1,700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#0B0B0C; --cream:#F3EFE8; --gold:#C9A227; --gold-dk:#8C6E1B; --gray:#9A968E;
@@ -92,6 +92,9 @@
   .dark .right .nfc{width:12.5mm;height:12.5mm;margin:0 3.4mm}
   .dark .right .lbl{margin-top:0}
 
+  .export{position:fixed;left:-10000px;top:0;display:flex;gap:10mm}
+  .export .card{box-shadow:none}
+
   /* ---------- impresión ---------- */
   @media print{
     body{background:none}
@@ -116,6 +119,7 @@
     <button data-f="a4" aria-pressed="false">Hoja A4 para recortar</button>
   </div>
   <button class="print" id="printBtn">Imprimir / Guardar PDF</button>
+  <button id="pngBtn">Descargar imágenes (PNG)</button>
 </div>
 <p class="help" id="help" hidden>
   Tamaño tarjeta de crédito, horizontal (85,6 × 54 mm). El QR y el NFC llevan al mismo link del tag, así que
@@ -203,6 +207,47 @@
         </div>
       </div>`;
 
+    // Descarga cada variante como PNG (con el QR real del local)
+    let h2i;
+    async function downloadPng(btn) {
+      const label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Generando…';
+      try {
+        h2i ||= await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js';
+          s.onload = () => res(window.htmlToImage);
+          s.onerror = () => { h2i = null; rej(new Error('No se pudo cargar el generador de imágenes.')); };
+          document.head.append(s);
+        });
+        await document.fonts.ready;
+        const box = document.createElement('div');
+        box.className = 'export';
+        const list = variant === 'clara' ? [['clara', light]] : variant === 'oscura' ? [['oscura', dark]] : [['clara', light], ['oscura', dark]];
+        box.innerHTML = list.map(([, f]) => f()).join('');
+        document.body.append(box);
+        await Promise.all([...box.querySelectorAll('img')].map((i) => i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; })));
+        const cards = [...box.querySelectorAll('.card')];
+        for (let i = 0; i < cards.length; i++) {
+          const url = await h2i.toPng(cards[i], { pixelRatio: 4, cacheBust: true });
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tarjeta-lord-${list[i][0]}.png`;
+          document.body.append(a);
+          a.click();
+          a.remove();
+          await new Promise((r) => setTimeout(r, 400));
+        }
+        box.remove();
+      } catch (e) {
+        alert(e.message || 'No se pudieron generar las imágenes.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    }
+
     let variant = 'ambas';
     let format = 'imprenta';
 
@@ -226,6 +271,7 @@
       if (b.dataset.v) variant = b.dataset.v;
       if (b.dataset.f) format = b.dataset.f;
       if (b.id === 'printBtn') return print();
+      if (b.id === 'pngBtn') return downloadPng(b);
       document.querySelectorAll('[data-v]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.v === variant)));
       document.querySelectorAll('[data-f]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === format)));
       render();
