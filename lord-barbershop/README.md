@@ -32,6 +32,7 @@ Todo corre en Netlify: páginas estáticas + una Netlify Function (`/api/*`) + N
    - iPhone: app gratis **NFC Tools → Escribir → Agregar registro → URL** → pegar el link.
    - Sirve cualquier tag **NTAG213/215/216** (sticker, llavero o tarjeta).
 4. Para clientes con celus sin NFC, el mismo panel muestra un **QR** (se puede poner en pantalla completa).
+5. **Tarjeta del barbero para imprimir** (`/tarjeta`, desde **NFC → Tarjeta para imprimir**): tarjeta de 54 × 85,6 mm (tamaño tarjeta de crédito) en dos variantes, clara y oscura, con el QR y el círculo para el NFC. Se imprime una por página (para la gráfica) o 9 en una hoja A4 para recortar. Para que tenga NFC: pedí tarjetas **PVC NFC (NTAG215)** impresas con el PDF y grabales el link, o imprimila en cartulina y pegá un sticker NFC redondo atrás del círculo. Si cambiás la clave del tag, hay que reimprimirla.
 
 ## Cómo funciona la validación
 
@@ -74,6 +75,7 @@ lord-barbershop/
 │   ├── index.html               # landing
 │   ├── cuenta.html              # app del cliente (+ /sello)
 │   ├── admin.html               # panel del barbero
+│   ├── tarjeta.html             # tarjeta del barbero para imprimir (QR + NFC)
 │   └── assets/
 │       ├── config.mjs           # valores por defecto (los usa la web y la API)
 │       ├── app.js · lord.css    # utilidades y estilos compartidos

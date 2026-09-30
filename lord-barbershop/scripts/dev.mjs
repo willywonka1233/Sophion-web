@@ -16,7 +16,7 @@ const TYPES = {
   '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png',
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
 };
-const REWRITES = { '/sello': '/cuenta.html', '/cuenta': '/cuenta.html', '/admin': '/admin.html', '/': '/index.html' };
+const REWRITES = { '/sello': '/cuenta.html', '/cuenta': '/cuenta.html', '/admin': '/admin.html', '/tarjeta': '/tarjeta.html', '/': '/index.html' };
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);

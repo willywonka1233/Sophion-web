@@ -23,6 +23,11 @@
   to = "/admin.html"
   status = 200
 
+[[redirects]]
+  from = "/tarjeta"
+  to = "/tarjeta.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -34,6 +39,11 @@
   for = "/admin*"
   [headers.values]
     X-Frame-Options = "DENY"
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/tarjeta*"
+  [headers.values]
     X-Robots-Tag = "noindex"
 
 [[headers]]

@@ -474,6 +474,8 @@ async function renderNfc() {
           <h3 class="display" style="font-size:20px">QR para celus sin NFC</h3>
           <div class="qr" id="qrBox"><div class="spinner"></div></div>
           <button class="btn btn-line btn-block" id="qrBig">Mostrar en pantalla completa</button>
+          <a class="btn btn-gold btn-block" href="/tarjeta" target="_blank" rel="noopener">Tarjeta para imprimir</a>
+          <p class="hint">Tarjeta chica (tipo tarjeta de crédito) con el QR y el lugar para el NFC. La tiene el barbero y el cliente valida con ella.</p>
         </div>
         <div class="panel">
           <h3 class="display" style="font-size:20px;margin-bottom:8px">Últimas validaciones</h3>
@@ -502,7 +504,7 @@ $('tab-nfc').addEventListener('click', async (e) => {
     }
   }
   if (id === 'rotateKey') {
-    if (!confirm('¿Cambiar la clave? El tag actual deja de funcionar hasta que lo grabes de nuevo.')) return;
+    if (!confirm('¿Cambiar la clave? El tag y la tarjeta impresa dejan de funcionar hasta que grabes el tag e imprimas la tarjeta de nuevo.')) return;
     try { await call('POST', '/admin/nfc/rotate'); toast('Clave nueva. Grabá el tag de nuevo.', 'ok'); renderNfc(); } catch (err) { toast(err.message, 'bad'); }
   }
   if (id === 'qrBig') {
