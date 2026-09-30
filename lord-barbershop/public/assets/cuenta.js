@@ -11,8 +11,9 @@ const settings = await loadConfig();
 let token = store.get('lord.token');
 let user = (() => { try { return JSON.parse(store.get('lord.user') || 'null'); } catch { return null; } })();
 const params = new URLSearchParams(location.search);
-const sealKey = params.get('k');
-let sealPending = !!sealKey;
+// Credencial de validación: código de tarjeta (/t/CODIGO → ?c=) o clave del tag (?k=)
+const sealCred = params.get('c') ? { c: params.get('c') } : params.get('k') ? { k: params.get('k') } : null;
+let sealPending = !!sealCred;
 const TABS = ['tarjeta', 'reservar', 'turnos'];
 let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tarjeta';
 const bk = { serviceId: null, barberId: 'any', date: null, time: null, slots: null, req: 0 };
@@ -403,7 +404,7 @@ function startSeal() {
 async function validate(useReward) {
   sealShow(`${WAIT}<h1 id="sealTitle">Validando tu corte…</h1><p>Un segundo.</p>`);
   try {
-    const r = await api('POST', '/validate', { k: sealKey, useReward }, token);
+    const r = await api('POST', '/validate', { ...sealCred, useReward }, token);
     history.replaceState(null, '', '/cuenta#tarjeta'); // así recargar no intenta validar de nuevo
     saveSession(null, r.user);
     navigator.vibrate?.([30, 60, 30]);

@@ -27,20 +27,21 @@ Todo corre en Netlify: páginas estáticas + una Netlify Function (`/api/*`) + N
 
 1. Entrar a `https://TU-SITIO/admin` con el `ADMIN_PIN`.
 2. **Ajustes**: cargar WhatsApp, dirección, precios, horarios, barberos y membresías, y tocar **Guardar cambios**. La web se actualiza al instante.
-3. **NFC**: grabar el link en un tag:
-   - Android + Chrome: botón **Grabar en un tag NFC** y acercar el tag.
-   - iPhone: app gratis **NFC Tools → Escribir → Agregar registro → URL** → pegar el link.
-   - Sirve cualquier tag **NTAG213/215/216** (sticker, llavero o tarjeta).
-4. Para clientes con celus sin NFC, el mismo panel muestra un **QR** (se puede poner en pantalla completa).
-5. **Tarjeta del barbero para imprimir** (`/tarjeta`, desde **NFC → Tarjeta para imprimir**): tarjeta horizontal de 85,6 × 54 mm (tamaño tarjeta de crédito) en dos variantes, clara y oscura, con el QR y el círculo para el NFC. Se imprime una por página (para la gráfica) o 10 en una hoja A4 para recortar, y con **Descargar imágenes (PNG)** se baja cada variante como imagen con el QR real. Para que tenga NFC: pedí tarjetas **PVC NFC (NTAG215)** impresas con el PDF y grabales el link, o imprimila en cartulina y pegá un sticker NFC redondo atrás del círculo. Si cambiás la clave del tag, hay que reimprimirla.
+3. **NFC → Tarjetas**: ya vienen creadas dos tarjetas (clara y oscura), cada una con **su propio código** (por ejemplo `k7m2px`).
+   - El QR y el NFC de cada tarjeta llevan a `https://TU-SITIO/t/CÓDIGO`. Ese link vive en la web: desde el panel elegís si **valida el corte** o lleva a **otro link** (reseñas de Google, Instagram…), y el cambio es inmediato, sin reimprimir.
+   - **Imprimir / PNG** abre la tarjeta lista para imprimir (85,6 × 54 mm, una por página o 10 por A4) o para **descargar en PNG**, un archivo por tarjeta, con su QR y su código impreso.
+   - **Grabar NFC** (Android + Chrome) graba el link de la tarjeta en el chip. Desde iPhone: app **NFC Tools → Escribir → Agregar registro → URL** y pegar el link (botón **Copiar**).
+   - Sirve cualquier chip **NTAG213/215/216**. Para la tarjeta física: pedí en una gráfica **tarjetas PVC NFC (NTAG215)** con el diseño, o imprimila en cartulina y pegá un sticker NFC atrás del círculo punteado.
+   - Se pueden crear más tarjetas (**+ Nueva tarjeta**), renombrarlas, cambiarles el diseño, desactivarlas o borrarlas.
+4. Para mostrar el QR de una tarjeta en el celu del barbero: **QR en pantalla**.
 
 ## Cómo funciona la validación
 
-- El tag tiene un link con una clave: `https://TU-SITIO/sello?k=CLAVE`.
+- Cada tarjeta tiene su código y su link `https://TU-SITIO/t/CÓDIGO`, que redirige a `/sello?c=CÓDIGO` mientras la tarjeta esté configurada para validar. (También sigue funcionando el link directo con clave `/sello?k=CLAVE`, en **NFC → Avanzado**.)
 - Si el cliente ya ingresó en ese celular, el corte se valida directo. Si no, ingresa con su número y PIN y se valida.
 - Orden de prioridad: si tiene un **premio** disponible le pregunta si quiere usarlo; si tiene **membresía activa** se descuenta un corte; si no, suma un **sello**. Cada `N` sellos (10 por defecto) gana un premio.
 - Si tenía turno ese día, el turno queda marcado como **realizado** en la agenda.
-- **Seguridad**: cada cliente puede validar un corte cada 12 h (se cambia en Ajustes). Si el link se filtra, en **NFC → Cambiar clave del tag** el tag viejo deja de funcionar. En **Últimas validaciones** se ve quién validó y cuándo, y desde **Clientes** se puede sacar un sello.
+- **Seguridad**: cada cliente puede validar un corte cada 12 h (se cambia en Ajustes). Si una tarjeta se pierde o su link se filtra, se **desactiva** desde **NFC → Tarjetas** y se crea otra. En **Últimas validaciones** se ve quién validó y cuándo, y desde **Clientes** se puede sacar un sello.
 - El barbero también puede sumar el corte a mano desde la agenda (**Listo + sumar corte**) o desde la ficha del cliente.
 
 ## Fotos de la galería
@@ -69,13 +70,13 @@ El servidor local guarda los datos en `.data/` (ignorado por git).
 ```
 lord-barbershop/
 ├── netlify.toml                 # build, redirecciones (/sello, /cuenta, /admin) y headers
-├── netlify/functions/api.mjs    # API: cuentas, turnos, validación NFC, panel
+├── netlify/functions/api.mjs    # API (/api/*) y links cortos de tarjetas (/t/CÓDIGO)
 ├── server/                      # lógica compartida (almacenamiento, sesiones, turnero, fidelidad)
 ├── public/
 │   ├── index.html               # landing
 │   ├── cuenta.html              # app del cliente (+ /sello)
 │   ├── admin.html               # panel del barbero
-│   ├── tarjeta.html             # tarjeta del barbero para imprimir (QR + NFC)
+│   ├── tarjeta.html             # tarjetas del barbero para imprimir o bajar en PNG (QR + NFC + código)
 │   └── assets/
 │       ├── config.mjs           # valores por defecto (los usa la web y la API)
 │       ├── app.js · lord.css    # utilidades y estilos compartidos

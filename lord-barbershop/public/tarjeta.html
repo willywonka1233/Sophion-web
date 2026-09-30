@@ -46,7 +46,7 @@
   .nfc{position:relative;border-radius:50%;border:.26mm dashed var(--gold)}
   .nfc .w{position:absolute;top:50%;width:2.4mm;height:4.6mm;transform:translateY(-50%)}
   .nfc .wl{left:-3.3mm}.nfc .wr{right:-3.3mm}
-  .cen3{position:absolute;font:400 3.2pt 'Jost';letter-spacing:.28em}
+  .code{position:absolute;font:500 3.6pt 'Jost';letter-spacing:.28em}
   .lbl{font:600 3.3pt 'Jost';letter-spacing:.26em}
 
   /* ---------- variante clara ---------- */
@@ -71,7 +71,7 @@
   .light .band{position:absolute;left:0;right:0;bottom:0;height:6.4mm;background:var(--gold);display:flex;align-items:center;justify-content:center;gap:2.2mm;font:600 4.5pt 'Jost';letter-spacing:.34em;color:var(--ink)}
   .light .band i{width:1.3mm;height:1.3mm;background:#4a3a0e;transform:rotate(45deg)}
   .light .band span:last-child{font-weight:500;color:#2e2507}
-  .light .cen3{right:2.4mm;bottom:.8mm;color:#6A5310}
+  .light .code{right:2.4mm;bottom:.8mm;color:#6A5310}
 
   /* ---------- variante oscura ---------- */
   .dark{background:var(--ink);color:var(--cream)}
@@ -79,7 +79,7 @@
   .dark .top img{width:9.5mm;height:auto}
   .dark .top b{display:block;font:600 3.7pt 'Jost';letter-spacing:.32em;color:var(--gray)}
   .dark .top b + b{color:var(--gold);margin-top:.8mm}
-  .dark .cen3{right:4mm;top:3.4mm;color:#8a857b}
+  .dark .code{right:4mm;top:3.4mm;color:#8a857b}
   .dark .text{position:absolute;left:4.2mm;bottom:4.2mm;width:38mm}
   .dark h1{font:400 21pt/.94 'Anton';text-transform:uppercase;letter-spacing:.005em}
   .dark h1 span{display:block;color:var(--gold);font-size:14.6pt;margin-top:.4mm}
@@ -109,11 +109,7 @@
 
 <div class="tools" id="tools" hidden>
   <a href="/admin#nfc">← Volver al panel</a>
-  <div class="grp" role="group" aria-label="Variante">Variante:
-    <button data-v="ambas" aria-pressed="true">Las dos</button>
-    <button data-v="clara" aria-pressed="false">Clara</button>
-    <button data-v="oscura" aria-pressed="false">Oscura</button>
-  </div>
+  <div class="grp" role="group" aria-label="Tarjetas" id="pick">Tarjeta:</div>
   <div class="grp" role="group" aria-label="Formato">Formato:
     <button data-f="imprenta" aria-pressed="true">Imprenta (1 por página)</button>
     <button data-f="a4" aria-pressed="false">Hoja A4 para recortar</button>
@@ -122,9 +118,10 @@
   <button id="pngBtn">Descargar imágenes (PNG)</button>
 </div>
 <p class="help" id="help" hidden>
-  Tamaño tarjeta de crédito, horizontal (85,6 × 54 mm). El QR y el NFC llevan al mismo link del tag, así que
-  <b>si cambiás la clave en el panel hay que volver a imprimirla y grabar el NFC de nuevo</b>.
-  Para el NFC: pedí en una gráfica <b>tarjetas PVC NFC (NTAG215)</b> con este diseño y después grabá el link desde el panel,
+  Tamaño tarjeta de crédito, horizontal (85,6 × 54 mm). Cada tarjeta tiene <b>su propio código</b> (va impreso abajo a la derecha)
+  y su QR lleva a <b>tuweb/t/CÓDIGO</b>. A dónde lleva se cambia en el panel (<b>NFC → Tarjetas</b>) sin reimprimir.
+  Con <b>Descargar imágenes</b> bajás cada tarjeta en PNG, en archivos separados.
+  Para el NFC: pedí en una gráfica <b>tarjetas PVC NFC (NTAG215)</b> con este diseño y grabales el link de cada tarjeta desde el panel,
   o imprimila en cartulina y pegá un <b>sticker NFC redondo</b> atrás del círculo punteado.
 </p>
 
@@ -139,39 +136,40 @@
   const WAVE_L = '<svg class="w wl" viewBox="0 0 16 30" aria-hidden="true"><path d="M13 5a14 14 0 0 0 0 20" fill="none" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/><path d="M6 1a20 20 0 0 0 0 28" fill="none" stroke="#C9A227" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></svg>';
   const WAVE_R = WAVE_L.replace('w wl', 'w wr').replace('<svg', '<svg style="transform:translateY(-50%) scaleX(-1)"');
   const crowns = (label) => `<div class="crowns">${CROWN.repeat(5)}<span>${label}</span></div>`;
+  const loadScript = (src) => new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = res;
+    s.onerror = () => rej(new Error('No se pudo cargar un recurso. Revisá la conexión.'));
+    document.head.append(s);
+  });
 
   function fail(html) {
     sheet.innerHTML = `<p class="msg">${html}</p>`;
   }
 
   if (!token) {
-    fail('Primero entrá al <a href="/admin">panel del barbero</a> con tu PIN y volvé a abrir esta página desde <b>NFC → Tarjeta para imprimir</b>.');
+    fail('Primero entrá al <a href="/admin">panel del barbero</a> con tu PIN y volvé a abrir esta página desde <b>NFC → Imprimir / PNG</b>.');
   } else {
-    let nfc, settings;
+    let cards, settings;
     try {
-      [nfc, { settings }] = await Promise.all([api('GET', '/admin/nfc', null, token), api('GET', '/admin/settings', null, token)]);
+      [{ cards }, { settings }] = await Promise.all([api('GET', '/admin/cards', null, token), api('GET', '/admin/settings', null, token)]);
+      await loadScript('https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js');
     } catch (e) {
       fail(`${esc(e.message)}<br><a href="/admin">Ir al panel</a>`);
       throw e;
     }
 
-    await new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
-      s.onload = res;
-      s.onerror = () => rej(new Error('No se pudo cargar el generador de QR. Revisá la conexión.'));
-      document.head.append(s);
-    }).catch((e) => { fail(esc(e.message)); throw e; });
-
-    const q = window.qrcode(0, 'M');
-    q.addData(nfc.url);
-    q.make();
-    const QR = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true })
-      .replace('fill="white"', 'fill="#F3EFE8"').replace('fill="black"', 'fill="#0B0B0C"');
-
+    const qrFor = (text) => {
+      const q = window.qrcode(0, 'M');
+      q.addData(text);
+      q.make();
+      return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true })
+        .replace('fill="white"', 'fill="#F3EFE8"').replace('fill="black"', 'fill="#0B0B0C"');
+    };
     const city = (settings.business.city || 'Santa Fe').split(',')[0].trim().toUpperCase();
 
-    const light = () => `
+    const light = (c) => `
       <div class="card light">
         <div class="topbar"></div>
         <div class="body">
@@ -185,55 +183,76 @@
           </div>
           <div class="panels">
             <div class="panel"><div class="nfc">${WAVE_L}${WAVE_R}</div><small class="lbl">APOYÁ</small></div>
-            <div class="panel"><div class="qr">${QR}</div><small class="lbl">O ESCANEÁ</small></div>
+            <div class="panel"><div class="qr">${qrFor(c.link)}</div><small class="lbl">O ESCANEÁ</small></div>
           </div>
         </div>
         <div class="band"><span>BARBER LORD</span><i></i><span>${esc(city)}</span></div>
-        <span class="cen3">cen3</span>
+        <span class="code">${esc(c.code)}</span>
       </div>`;
 
-    const dark = () => `
+    const dark = (c) => `
       <div class="card dark">
         <div class="top"><img src="/assets/img/logo.png" alt="Lord"><div><b>BARBER LORD</b><b>TARJETA DE FIDELIDAD</b></div></div>
-        <span class="cen3">cen3</span>
+        <span class="code">${esc(c.code)}</span>
         <div class="text">
           <h1>Tu corte<span>suma premios</span></h1>
           <div class="bar"></div>
           <p class="sub">Validalo al terminar</p>
         </div>
         <div class="codes">
-          <div><div class="qr">${QR}</div><small class="lbl">ESCANEÁ</small></div>
+          <div><div class="qr">${qrFor(c.link)}</div><small class="lbl">ESCANEÁ</small></div>
           <div class="right"><div class="crowns">${CROWN.repeat(5)}</div><div class="nfc">${WAVE_L}${WAVE_R}</div><small class="lbl">APOYÁ EL CELU</small></div>
         </div>
       </div>`;
 
-    // Descarga cada variante como PNG (con el QR real del local)
+    const cardHtml = (c) => (c.variant === 'oscura' ? dark(c) : light(c));
+    const initial = new URLSearchParams(location.search).get('code');
+    let sel = cards.some((c) => c.code === initial) ? initial : 'todas';
+    let format = 'imprenta';
+
+    const selected = () => (sel === 'todas' ? cards.filter((c) => c.active) : cards.filter((c) => c.code === sel));
+    const note = (c) => [!c.active && 'desactivada', c.target === 'url' && 'hoy lleva a otro link'].filter(Boolean).join(' · ');
+
+    document.getElementById('pick').insertAdjacentHTML('beforeend',
+      `<button data-c="todas">Todas</button>${cards.map((c) => `<button data-c="${esc(c.code)}">${esc(c.name)} · ${esc(c.code)}</button>`).join('')}`);
+
+    function render() {
+      document.querySelectorAll('[data-c]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.c === sel)));
+      document.querySelectorAll('[data-f]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === format)));
+      const list = selected();
+      if (!list.length) { fail('No hay tarjetas activas. Activalas o creá una en el panel (NFC → Tarjetas).'); return; }
+      const rule = document.getElementById('pageRule');
+      if (format === 'imprenta') {
+        rule.textContent = '@page{size:85.6mm 54mm;margin:0} @media print{.sheet{display:block}.slot{break-after:page}}';
+        sheet.innerHTML = list.map((c) => `<figure class="slot">${cardHtml(c)}<figcaption>${esc(c.name)} · código ${esc(c.code)}${note(c) ? ` · ${note(c)}` : ''}</figcaption></figure>`).join('');
+      } else {
+        // 10 por hoja A4 (2 × 5) con línea de corte
+        rule.textContent = '@page{size:A4;margin:7mm} @media print{.sheet{gap:2.5mm!important;padding:0!important;width:174mm;margin:0 auto}.card{outline:.1mm dashed #999;outline-offset:.8mm}}';
+        sheet.innerHTML = Array.from({ length: 10 }, (_, i) => `<figure class="slot">${cardHtml(list[i % list.length])}</figure>`).join('');
+      }
+    }
+
+    // Descarga cada tarjeta elegida como PNG, en archivos separados
     let h2i;
     async function downloadPng(btn) {
       const label = btn.textContent;
       btn.disabled = true;
       btn.textContent = 'Generando…';
       try {
-        h2i ||= await new Promise((res, rej) => {
-          const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js';
-          s.onload = () => res(window.htmlToImage);
-          s.onerror = () => { h2i = null; rej(new Error('No se pudo cargar el generador de imágenes.')); };
-          document.head.append(s);
-        });
+        if (!h2i) { await loadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js'); h2i = window.htmlToImage; }
         await document.fonts.ready;
+        const list = selected();
         const box = document.createElement('div');
         box.className = 'export';
-        const list = variant === 'clara' ? [['clara', light]] : variant === 'oscura' ? [['oscura', dark]] : [['clara', light], ['oscura', dark]];
-        box.innerHTML = list.map(([, f]) => f()).join('');
+        box.innerHTML = list.map(cardHtml).join('');
         document.body.append(box);
-        await Promise.all([...box.querySelectorAll('img')].map((i) => i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; })));
-        const cards = [...box.querySelectorAll('.card')];
-        for (let i = 0; i < cards.length; i++) {
-          const url = await h2i.toPng(cards[i], { pixelRatio: 4, cacheBust: true });
+        await Promise.all([...box.querySelectorAll('img')].map((i) => (i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; }))));
+        const nodes = [...box.querySelectorAll('.card')];
+        for (let i = 0; i < nodes.length; i++) {
+          const url = await h2i.toPng(nodes[i], { pixelRatio: 4, cacheBust: true });
           const a = document.createElement('a');
           a.href = url;
-          a.download = `tarjeta-lord-${list[i][0]}.png`;
+          a.download = `tarjeta-lord-${list[i].variant}-${list[i].code}.png`;
           document.body.append(a);
           a.click();
           a.remove();
@@ -248,32 +267,13 @@
       }
     }
 
-    let variant = 'ambas';
-    let format = 'imprenta';
-
-    function render() {
-      const list = variant === 'clara' ? [light] : variant === 'oscura' ? [dark] : [light, dark];
-      const rule = document.getElementById('pageRule');
-      if (format === 'imprenta') {
-        rule.textContent = '@page{size:85.6mm 54mm;margin:0} @media print{.sheet{display:block}.slot{break-after:page}}';
-        sheet.innerHTML = list.map((f) => `<figure class="slot">${f()}<figcaption>${f === light ? 'Clara' : 'Oscura'}</figcaption></figure>`).join('');
-      } else {
-        // 10 por hoja A4 (2 × 5) con línea de corte
-        rule.textContent = '@page{size:A4;margin:7mm} @media print{.sheet{gap:2.5mm!important;padding:0!important;width:174mm;margin:0 auto}.card{outline:.1mm dashed #999;outline-offset:.8mm}}';
-        const cards = Array.from({ length: 10 }, (_, i) => list[i % list.length]());
-        sheet.innerHTML = cards.map((c) => `<figure class="slot">${c}</figure>`).join('');
-      }
-    }
-
     document.getElementById('tools').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
-      if (b.dataset.v) variant = b.dataset.v;
-      if (b.dataset.f) format = b.dataset.f;
       if (b.id === 'printBtn') return print();
       if (b.id === 'pngBtn') return downloadPng(b);
-      document.querySelectorAll('[data-v]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.v === variant)));
-      document.querySelectorAll('[data-f]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === format)));
+      if (b.dataset.c) sel = b.dataset.c;
+      if (b.dataset.f) format = b.dataset.f;
       render();
     });
 

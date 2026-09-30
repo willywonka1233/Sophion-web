@@ -1,4 +1,5 @@
 // API de Lord Barber Shop · Coffee — una sola función que atiende /api/*
+import { randomBytes } from 'node:crypto';
 import { store, update, getJSON } from '../../server/db.mjs';
 import {
   HttpError, signToken, readToken, bearer, hashPin, checkPin, safeEqual,
@@ -52,6 +53,39 @@ async function getNfc() {
   return r.modified ? fresh : (await s.get('nfc')).data;
 }
 const tagUrl = (req, key) => `${new URL(req.url).origin}/sello?k=${key}`;
+
+// ---------- tarjetas del barbero (QR + NFC con código propio) ----------
+// Cada tarjeta impresa tiene un código único y su QR/NFC apunta a /t/CODIGO.
+// Desde el panel se elige a dónde lleva (validar el corte u otro link) sin reimprimir.
+const CODE_ABC = 'abcdefghjkmnpqrstuvwxyz23456789';
+function newCode(taken) {
+  for (;;) {
+    let c = '';
+    for (const x of randomBytes(6)) c += CODE_ABC[x % CODE_ABC.length];
+    if (!taken.has(c)) return c;
+  }
+}
+function defaultCards() {
+  const taken = new Set();
+  const mk = (name, variant) => {
+    const code = newCode(taken);
+    taken.add(code);
+    return { code, name, variant, target: 'validate', url: '', active: true, createdAt: Date.now(), uses: 0, lastUsedAt: null };
+  };
+  return [mk('Tarjeta clara', 'clara'), mk('Tarjeta oscura', 'oscura')];
+}
+async function getCards() {
+  const cur = await getJSON('meta', 'cards');
+  if (cur) return cur;
+  return update('meta', 'cards', (c) => (c ? undefined : defaultCards()));
+}
+const cardView = (req, c) => ({ ...c, link: `${new URL(req.url).origin}/t/${c.code}` });
+
+async function shortLink(code) {
+  const card = (await getCards()).find((x) => x.code === code);
+  const to = card && card.active && card.target === 'url' && card.url ? card.url : `/sello?c=${encodeURIComponent(code)}`;
+  return new Response(null, { status: 302, headers: { location: to, 'cache-control': 'no-store' } });
+}
 
 // ---------- turnos ----------
 async function setBookingStatus(date, id, patch) {
@@ -202,9 +236,17 @@ const routes = {
   'POST /validate': async (req) => {
     const { u } = await requireUser(req);
     const b = await body(req);
-    const nfc = await getNfc();
-    if (!b.k || !safeEqual(b.k, nfc.key)) {
-      throw new HttpError(403, 'Este código NFC ya no es válido. Pedile al barbero que te muestre el nuevo.');
+    let card = null;
+    if (b.c) {
+      const code = String(b.c).trim().toLowerCase();
+      card = (await getCards()).find((x) => x.code === code);
+      if (!card || !card.active) throw new HttpError(403, 'Esta tarjeta no existe o fue desactivada. Pedile al barbero la nueva.');
+      if (card.target !== 'validate') throw new HttpError(403, 'Esta tarjeta no está configurada para validar cortes.');
+    } else {
+      const nfc = await getNfc();
+      if (!b.k || !safeEqual(b.k, nfc.key)) {
+        throw new HttpError(403, 'Este código NFC ya no es válido. Pedile al barbero que te muestre el nuevo.');
+      }
     }
     const settings = await getSettings();
     const cd = settings.validation.cooldownHours * 3600e3;
@@ -232,7 +274,16 @@ const routes = {
         return doc;
       });
     }
-    await addLog({ phone: u.phone, name: u.name, type: result.type, earned: result.earned, via: 'nfc' });
+    if (card) {
+      await update('meta', 'cards', (cs) => {
+        const x = cs?.find((y) => y.code === card.code);
+        if (!x) return undefined;
+        x.uses = (x.uses || 0) + 1;
+        x.lastUsedAt = Date.now();
+        return cs;
+      });
+    }
+    await addLog({ phone: u.phone, name: u.name, type: result.type, earned: result.earned, via: 'nfc', card: card?.name || null });
     return json(200, { result, user: publicUser(fresh, settings) });
   },
 
@@ -472,6 +523,54 @@ const routes = {
     return json(200, { ...nfc, url: tagUrl(req, nfc.key) });
   },
 
+  'GET /admin/cards': async (req) => {
+    await requireAdmin(req);
+    return json(200, { cards: (await getCards()).map((c) => cardView(req, c)) });
+  },
+
+  'POST /admin/cards': async (req) => {
+    await requireAdmin(req);
+    const b = await body(req);
+    await getCards(); // crea las dos tarjetas iniciales si no existen
+    const cards = await update('meta', 'cards', (cs) => {
+      cs = cs || [];
+      if (b.action === 'create') {
+        if (cs.length >= 50) throw new HttpError(400, 'Llegaste al máximo de tarjetas.');
+        const taken = new Set(cs.map((x) => x.code));
+        let code = String(b.code || '').trim().toLowerCase();
+        if (code) {
+          if (!/^[a-z0-9-]{3,20}$/.test(code)) throw new HttpError(400, 'El código tiene que tener de 3 a 20 letras, números o guiones.');
+          if (taken.has(code)) throw new HttpError(409, 'Ese código ya existe.');
+        } else {
+          code = newCode(taken);
+        }
+        cs.push({
+          code, name: String(b.name || '').trim().slice(0, 40) || `Tarjeta ${cs.length + 1}`,
+          variant: b.variant === 'oscura' ? 'oscura' : 'clara', target: 'validate', url: '',
+          active: true, createdAt: Date.now(), uses: 0, lastUsedAt: null,
+        });
+        return cs;
+      }
+      const c = cs.find((x) => x.code === b.code);
+      if (!c) throw new HttpError(404, 'No encontramos esa tarjeta.');
+      if (b.action === 'delete') return cs.filter((x) => x !== c);
+      if (b.action !== 'update') throw new HttpError(400, 'Acción inválida.');
+      if (b.name !== undefined) c.name = String(b.name).trim().slice(0, 40) || c.name;
+      if (b.variant !== undefined) c.variant = b.variant === 'oscura' ? 'oscura' : 'clara';
+      if (b.active !== undefined) c.active = !!b.active;
+      if (b.target === 'url') {
+        const url = String(b.url || '').trim();
+        if (!/^https:\/\/\S+$/i.test(url) || url.length > 500) throw new HttpError(400, 'Poné un link que empiece con https://');
+        c.target = 'url';
+        c.url = url;
+      } else if (b.target === 'validate') {
+        c.target = 'validate';
+      }
+      return cs;
+    });
+    return json(200, { cards: cards.map((c) => cardView(req, c)) });
+  },
+
   'GET /admin/log': async (req) => {
     await requireAdmin(req);
     return json(200, { log: ((await getJSON('meta', 'log')) || []).slice(0, 150) });
@@ -492,9 +591,16 @@ const routes = {
 };
 
 export default async (req) => {
-  const path = new URL(req.url).pathname.replace(/^\/api/, '').replace(/\/+$/, '') || '/';
+  const { pathname } = new URL(req.url);
+  const path = pathname.replace(/^\/api/, '').replace(/\/+$/, '') || '/';
   const handler = routes[`${req.method} ${path}`];
   try {
+    if (pathname.startsWith('/t/')) {
+      let code = pathname.slice(3);
+      try { code = decodeURIComponent(code); } catch { /* código mal escrito */ }
+      code = code.replace(/\/+$/, '').trim().toLowerCase();
+      return await shortLink(code);
+    }
     if (!handler) throw new HttpError(404, 'Ruta inexistente.');
     return await handler(req);
   } catch (e) {
@@ -504,4 +610,4 @@ export default async (req) => {
   }
 };
 
-export const config = { path: '/api/*' };
+export const config = { path: ['/api/*', '/t/*'] };

@@ -188,6 +188,55 @@ test('panel: completar turno suma corte una sola vez, clientes y reseteo de PIN'
   assert.ok(!slots.data.slots.some((x) => x.time === '18:00'));
 });
 
+test('tarjetas con código propio: link corto, validación y cambio de destino', async () => {
+  const list = await call('GET', '/admin/cards', { token: admin });
+  assert.equal(list.status, 200);
+  assert.equal(list.data.cards.length, 2);
+  const [clara, oscura] = list.data.cards;
+  assert.notEqual(clara.code, oscura.code);
+  assert.deepEqual([clara.variant, oscura.variant], ['clara', 'oscura']);
+  assert.equal(clara.link, `https://lord.test/t/${clara.code}`);
+
+  // /t/CODIGO redirige a la validación con el código de la tarjeta
+  const r = await api(new Request(`https://lord.test/t/${clara.code.toUpperCase()}`));
+  assert.equal(r.status, 302);
+  assert.equal(r.headers.get('location'), `/sello?c=${clara.code}`);
+
+  const s = (await call('GET', '/admin/settings', { token: admin })).data.settings;
+  s.validation.cooldownHours = 0;
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+  const t = (await call('POST', '/register', { body: { name: 'Facu', phone: '3564777777', pin: '7777' } })).data.token;
+  const v = await call('POST', '/validate', { token: t, body: { c: clara.code } });
+  assert.equal(v.status, 200, JSON.stringify(v.data));
+  assert.equal(v.data.user.stamps, 1);
+  const after = (await call('GET', '/admin/cards', { token: admin })).data.cards.find((c) => c.code === clara.code);
+  assert.equal(after.uses, 1);
+  assert.equal((await call('GET', '/admin/log', { token: admin })).data.log[0].card, 'Tarjeta clara');
+
+  // código inexistente
+  assert.equal((await call('POST', '/validate', { token: t, body: { c: 'noexiste' } })).status, 403);
+
+  // cambiar el destino a otro link: /t redirige ahí y ya no valida
+  const bad = await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: oscura.code, target: 'url', url: 'javascript:alert(1)' } });
+  assert.equal(bad.status, 400);
+  await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: oscura.code, target: 'url', url: 'https://g.page/r/lord/review' } });
+  const r2 = await api(new Request(`https://lord.test/t/${oscura.code}`));
+  assert.equal(r2.headers.get('location'), 'https://g.page/r/lord/review');
+  assert.equal((await call('POST', '/validate', { token: t, body: { c: oscura.code } })).status, 403);
+  await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: oscura.code, target: 'validate' } });
+  assert.equal((await call('POST', '/validate', { token: t, body: { c: oscura.code } })).status, 200);
+
+  // desactivar, crear con código propio y borrar
+  await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: clara.code, active: false } });
+  assert.equal((await call('POST', '/validate', { token: t, body: { c: clara.code } })).status, 403);
+  const created = await call('POST', '/admin/cards', { token: admin, body: { action: 'create', name: 'Llavero Tomás', variant: 'oscura', code: 'Tomas-1' } });
+  assert.equal(created.data.cards.at(-1).code, 'tomas-1');
+  assert.equal((await call('POST', '/admin/cards', { token: admin, body: { action: 'create', code: 'tomas-1' } })).status, 409);
+  const del = await call('POST', '/admin/cards', { token: admin, body: { action: 'delete', code: 'tomas-1' } });
+  assert.equal(del.data.cards.length, 2);
+  assert.equal((await call('GET', '/admin/cards')).status, 401);
+});
+
 test('bloqueo tras PIN incorrecto repetido', async () => {
   await call('POST', '/register', { body: { name: 'Eva', phone: '3564666666', pin: '6666' } });
   for (let i = 0; i < 5; i++) await call('POST', '/login', { body: { phone: '3564666666', pin: '0000' } });

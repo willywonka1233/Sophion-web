@@ -20,7 +20,7 @@ const REWRITES = { '/sello': '/cuenta.html', '/cuenta': '/cuenta.html', '/admin'
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/t/')) {
     const chunks = [];
     for await (const c of req) chunks.push(c);
     const request = new Request(url, {

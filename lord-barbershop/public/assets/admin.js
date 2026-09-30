@@ -427,89 +427,192 @@ async function qrSvg(text) {
 }
 
 const LOG_TYPE = { stamp: 'sumó un corte', reward: 'canjeó su premio', membership: 'usó su membresía' };
+let cards = [];
+const VARIANT = { clara: 'Clara', oscura: 'Oscura' };
+
+function cardHtml(c, canWrite) {
+  const other = c.variant === 'clara' ? 'oscura' : 'clara';
+  return `<article class="panel stack card-row ${c.active ? '' : 'off'}">
+    <div class="cr-head">
+      <div><b>${esc(c.name)}</b>
+        <small>Código <code>${esc(c.code)}</code> · diseño ${VARIANT[c.variant]} · ${c.uses || 0} validaciones${c.lastUsedAt ? ` · última ${esc(fmtTs(c.lastUsedAt))}` : ''}</small></div>
+      ${c.active ? '<span class="pill ok">Activa</span>' : '<span class="pill dim">Desactivada</span>'}
+    </div>
+    <div class="url-box"><span>${esc(c.link)}</span><button class="btn btn-line btn-sm" data-copy="${esc(c.code)}">Copiar</button></div>
+    <div class="field">
+      <label for="tg-${esc(c.code)}">A dónde lleva el QR y el NFC</label>
+      <select class="select" id="tg-${esc(c.code)}" data-target="${esc(c.code)}">
+        <option value="validate" ${c.target === 'validate' ? 'selected' : ''}>Validar el corte (Club Lord)</option>
+        <option value="url" ${c.target === 'url' ? 'selected' : ''}>Otro link (reseñas, Instagram…)</option>
+      </select>
+      <div class="inline" data-urlrow="${esc(c.code)}" ${c.target === 'url' ? '' : 'hidden'}>
+        <input class="input" data-url="${esc(c.code)}" type="url" placeholder="https://…" value="${esc(c.url || '')}">
+        <button class="btn btn-line btn-sm" data-saveurl="${esc(c.code)}" style="--h:52px">Guardar</button>
+      </div>
+    </div>
+    <div class="cd-grid">
+      <a class="btn btn-gold" href="/tarjeta?code=${encodeURIComponent(c.code)}" target="_blank" rel="noopener">Imprimir / PNG</a>
+      <button class="btn btn-line" data-qr="${esc(c.code)}">QR en pantalla</button>
+      ${canWrite ? `<button class="btn btn-line" data-write="${esc(c.code)}">Grabar NFC</button>` : ''}
+      <button class="btn btn-line" data-toggle="${esc(c.code)}">${c.active ? 'Desactivar' : 'Activar'}</button>
+      <button class="btn btn-ghost" data-rename="${esc(c.code)}">Renombrar</button>
+      <button class="btn btn-ghost" data-variant="${esc(c.code)}" data-to="${other}">Pasar a diseño ${VARIANT[other].toLowerCase()}</button>
+      <button class="btn btn-ghost" data-delcard="${esc(c.code)}">Borrar</button>
+    </div>
+    <p class="nfc-status" data-status="${esc(c.code)}" role="status"></p>
+  </article>`;
+}
 
 async function renderNfc() {
   $('tab-nfc').innerHTML = '<div class="empty"><div class="spinner"></div></div>';
   let log;
   try {
-    [nfc, { log }] = await Promise.all([call('GET', '/admin/nfc'), call('GET', '/admin/log')]);
+    [nfc, { log }, { cards }] = await Promise.all([call('GET', '/admin/nfc'), call('GET', '/admin/log'), call('GET', '/admin/cards')]);
   } catch (e) {
     $('tab-nfc').innerHTML = `<div class="empty">${esc(e.message)}</div>`;
     return;
   }
   const canWrite = 'NDEFReader' in window;
   $('tab-nfc').innerHTML = `
-    <div class="adm-head"><h1>Tag NFC</h1></div>
-    <div class="nfc-grid">
+    <div class="adm-head"><h1>Tarjetas y NFC</h1><button class="btn btn-gold btn-sm" id="newCard">+ Nueva tarjeta</button></div>
+    <p class="muted" style="margin:-6px 0 16px;max-width:760px">Cada tarjeta tiene su <b>código propio</b> (va impreso en la tarjeta). Su QR y su NFC llevan a <b>tuweb/t/CÓDIGO</b>, y desde acá elegís a dónde lleva sin tener que reimprimirla.</p>
+    <div class="cards-grid">${cards.map((c) => cardHtml(c, canWrite)).join('') || '<div class="empty">No hay tarjetas.</div>'}</div>
+
+    <div class="nfc-grid" style="margin-top:18px">
       <div class="stack">
         <div class="panel stack">
-          <h3 class="display" style="font-size:20px">Link del tag</h3>
-          <p class="muted">Este link va grabado en el tag NFC que tenés vos (llavero, tarjeta o sticker). Cuando el cliente apoya su celu, se abre su tarjeta Lord y el corte se suma solo.</p>
-          <div class="url-box"><span>${esc(nfc.url)}</span><button class="btn btn-line btn-sm" id="copyUrl">Copiar</button></div>
-          ${canWrite
-            ? `<button class="btn btn-gold btn-block" id="writeTag">Grabar en un tag NFC</button><p class="nfc-status" id="nfcStatus" role="status"></p>`
-            : `<div class="notice" style="margin:0">Para grabar el tag directo desde acá, abrí este panel con Chrome en un Android.</div>`}
-          <div>
-            <p class="label" style="margin-bottom:8px">Desde iPhone (o cualquier celu)</p>
-            <ol class="tips">
-              <li>Bajá la app gratis <b>NFC Tools</b>.</li>
-              <li>Tocá <b>Escribir → Agregar un registro → URL/URI</b>.</li>
-              <li>Pegá el link de arriba, tocá <b>Escribir</b> y acercá el tag.</li>
-            </ol>
-          </div>
+          <h3 class="display" style="font-size:20px">Grabar el NFC de una tarjeta</h3>
+          ${canWrite ? '<p class="muted">Tocá <b>Grabar NFC</b> en la tarjeta y acercá el chip a la parte de atrás del celu.</p>' : '<p class="muted">Desde Android con Chrome aparece el botón <b>Grabar NFC</b> en cada tarjeta. Desde iPhone:</p>'}
+          <ol class="tips">
+            <li>Bajá la app gratis <b>NFC Tools</b>.</li>
+            <li>Tocá <b>Escribir → Agregar un registro → URL/URI</b>.</li>
+            <li>Pegá el link de la tarjeta (botón <b>Copiar</b>), tocá <b>Escribir</b> y acercá el chip.</li>
+          </ol>
         </div>
         <div class="panel stack">
           <h3 class="display" style="font-size:20px">Seguridad</h3>
           <ul class="tips">
-            <li>Tené el tag con vos, no pegado a la vista de todos.</li>
             <li>Cada cliente puede validar un corte cada <b>${settings.validation.cooldownHours} h</b> (se cambia en Ajustes).</li>
-            <li>Si sospechás que alguien usa el link sin venir, cambiá la clave: el tag viejo deja de funcionar y lo grabás de nuevo.</li>
+            <li>Si una tarjeta se pierde o sospechás que alguien usa su link sin venir, <b>desactivala</b> y creá una nueva.</li>
+            <li>Cambiar a dónde lleva una tarjeta es inmediato: no hace falta reimprimir ni regrabar el NFC.</li>
           </ul>
-          <button class="btn btn-danger" id="rotateKey">Cambiar clave del tag</button>
-          <p class="hint">Última clave generada: ${esc(fmtTs(nfc.rotatedAt))}</p>
         </div>
       </div>
-      <div class="stack">
-        <div class="panel stack center">
-          <h3 class="display" style="font-size:20px">QR para celus sin NFC</h3>
-          <div class="qr" id="qrBox"><div class="spinner"></div></div>
-          <button class="btn btn-line btn-block" id="qrBig">Mostrar en pantalla completa</button>
-          <a class="btn btn-gold btn-block" href="/tarjeta" target="_blank" rel="noopener">Tarjeta para imprimir</a>
-          <p class="hint">Tarjeta chica (tipo tarjeta de crédito) con el QR y el lugar para el NFC. La tiene el barbero y el cliente valida con ella.</p>
-        </div>
-        <div class="panel">
-          <h3 class="display" style="font-size:20px;margin-bottom:8px">Últimas validaciones</h3>
-          ${log.length ? `<ul class="hist log-list">${log.slice(0, 40).map((l) => `<li><span><b>${esc(l.name)}</b> ${esc(LOG_TYPE[l.type] || l.type)}${l.earned ? ' · ¡ganó premio!' : ''}${l.via === 'admin' ? ' · desde el panel' : ''}</span><span>${esc(fmtTs(l.at))}</span></li>`).join('')}</ul>` : '<p class="muted">Todavía no hay validaciones.</p>'}
-        </div>
+      <div class="panel">
+        <h3 class="display" style="font-size:20px;margin-bottom:8px">Últimas validaciones</h3>
+        ${log.length ? `<ul class="hist log-list">${log.slice(0, 40).map((l) => `<li><span><b>${esc(l.name)}</b> ${esc(LOG_TYPE[l.type] || l.type)}${l.earned ? ' · ¡ganó premio!' : ''}${l.via === 'admin' ? ' · desde el panel' : l.card ? ` · ${esc(l.card)}` : ''}</span><span>${esc(fmtTs(l.at))}</span></li>`).join('')}</ul>` : '<p class="muted">Todavía no hay validaciones.</p>'}
       </div>
-    </div>`;
-  qrSvg(nfc.url).then((svg) => { $('qrBox').innerHTML = svg; }).catch((e) => { $('qrBox').textContent = e.message; });
+    </div>
+
+    <details class="panel adv">
+      <summary>Avanzado: link directo del tag (sin código de tarjeta)</summary>
+      <div class="stack" style="margin-top:14px">
+        <p class="muted">Link fijo con clave, por si ya grabaste un tag antes de usar tarjetas. Si cambiás la clave, ese tag deja de funcionar.</p>
+        <div class="url-box"><span>${esc(nfc.url)}</span><button class="btn btn-line btn-sm" id="copyUrl">Copiar</button></div>
+        <button class="btn btn-danger" id="rotateKey">Cambiar clave del link directo</button>
+        <p class="hint">Última clave generada: ${esc(fmtTs(nfc.rotatedAt))}</p>
+      </div>
+    </details>`;
 }
 
-$('tab-nfc').addEventListener('click', async (e) => {
-  const id = e.target.closest('button')?.id;
-  if (id === 'copyUrl') {
-    try { await navigator.clipboard.writeText(nfc.url); toast('Link copiado.', 'ok'); } catch { toast('No se pudo copiar. Seleccionalo a mano.', 'bad'); }
+async function cardAction(body, okMsg) {
+  try {
+    ({ cards } = await call('POST', '/admin/cards', body));
+    if (okMsg) toast(okMsg, 'ok');
+    renderNfc();
+  } catch (err) {
+    toast(err.message, 'bad');
   }
-  if (id === 'writeTag') {
-    const st = $('nfcStatus');
+}
+
+function newCardModal() {
+  openModal(`
+    <div class="stack">
+      <div class="cd-head"><h2>Nueva tarjeta</h2><button class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+      <form id="cardForm" class="stack">
+        <div class="field"><label for="ncName">Nombre</label><input class="input" id="ncName" placeholder="Tarjeta de Tomás, mostrador…" maxlength="40"></div>
+        <div class="grid2">
+          <div class="field"><label for="ncVar">Diseño</label><select class="select" id="ncVar"><option value="clara">Clara</option><option value="oscura">Oscura</option></select></div>
+          <div class="field"><label for="ncCode">Código (opcional)</label><input class="input" id="ncCode" placeholder="Se genera solo" maxlength="20" autocapitalize="none"></div>
+        </div>
+        <p class="hint">El código va impreso en la tarjeta y forma su link (tuweb/t/código). Si lo dejás vacío se crea uno al azar.</p>
+        <p class="error-msg" id="ncErr"></p>
+        <button class="btn btn-gold btn-block" type="submit">Crear tarjeta</button>
+      </form>
+    </div>`);
+  $('cardForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      ({ cards } = await call('POST', '/admin/cards', { action: 'create', name: $('ncName').value, variant: $('ncVar').value, code: $('ncCode').value }));
+      closeModal();
+      toast('Tarjeta creada.', 'ok');
+      renderNfc();
+    } catch (err) {
+      $('ncErr').textContent = err.message;
+    }
+  });
+}
+
+$('tab-nfc').addEventListener('change', (e) => {
+  const code = e.target.dataset.target;
+  if (!code) return;
+  const row = $('tab-nfc').querySelector(`[data-urlrow="${CSS.escape(code)}"]`);
+  if (e.target.value === 'url') {
+    row.hidden = false;
+    row.querySelector('input').focus();
+  } else {
+    row.hidden = true;
+    cardAction({ action: 'update', code, target: 'validate' }, 'Listo: la tarjeta vuelve a validar cortes.');
+  }
+});
+
+$('tab-nfc').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const d = btn.dataset;
+  const card = cards.find((c) => c.code === (d.copy || d.qr || d.write || d.toggle || d.rename || d.variant || d.delcard || d.saveurl));
+  if (btn.id === 'newCard') return newCardModal();
+  if (btn.id === 'copyUrl' || d.copy) {
+    const text = btn.id === 'copyUrl' ? nfc.url : card.link;
+    try { await navigator.clipboard.writeText(text); toast('Link copiado.', 'ok'); } catch { toast('No se pudo copiar. Seleccionalo a mano.', 'bad'); }
+    return;
+  }
+  if (btn.id === 'rotateKey') {
+    if (!confirm('¿Cambiar la clave del link directo? Los tags grabados con ese link dejan de funcionar. Las tarjetas con código no se ven afectadas.')) return;
+    try { await call('POST', '/admin/nfc/rotate'); toast('Clave nueva.', 'ok'); renderNfc(); } catch (err) { toast(err.message, 'bad'); }
+    return;
+  }
+  if (!card) return;
+  if (d.qr) {
+    try {
+      $('qrFullCode').innerHTML = await qrSvg(card.link);
+      $('qrFull').hidden = false;
+    } catch (err) { toast(err.message, 'bad'); }
+  } else if (d.write) {
+    const st = $('tab-nfc').querySelector(`[data-status="${CSS.escape(card.code)}"]`);
     try {
       const ndef = new window.NDEFReader();
-      st.textContent = 'Acercá el tag a la parte de atrás del celu…';
-      await ndef.write({ records: [{ recordType: 'url', data: nfc.url }] });
-      st.textContent = '✓ Tag grabado. Probalo apoyando cualquier celu.';
-      toast('Tag grabado.', 'ok');
+      st.textContent = 'Acercá el chip a la parte de atrás del celu…';
+      await ndef.write({ records: [{ recordType: 'url', data: card.link }] });
+      st.textContent = '✓ NFC grabado. Probalo apoyando cualquier celu.';
+      toast('NFC grabado.', 'ok');
     } catch (err) {
       st.textContent = err.name === 'NotAllowedError' ? 'Tenés que permitir el acceso a NFC.' : `No se pudo grabar: ${err.message}`;
     }
-  }
-  if (id === 'rotateKey') {
-    if (!confirm('¿Cambiar la clave? El tag y la tarjeta impresa dejan de funcionar hasta que grabes el tag e imprimas la tarjeta de nuevo.')) return;
-    try { await call('POST', '/admin/nfc/rotate'); toast('Clave nueva. Grabá el tag de nuevo.', 'ok'); renderNfc(); } catch (err) { toast(err.message, 'bad'); }
-  }
-  if (id === 'qrBig') {
-    $('qrFullCode').innerHTML = $('qrBox').innerHTML;
-    $('qrFull').hidden = false;
+  } else if (d.saveurl) {
+    const url = $('tab-nfc').querySelector(`[data-url="${CSS.escape(card.code)}"]`).value.trim();
+    cardAction({ action: 'update', code: card.code, target: 'url', url }, 'Listo: la tarjeta ahora lleva a ese link.');
+  } else if (d.toggle) {
+    if (card.active && !confirm(`¿Desactivar "${card.name}"? Su QR y su NFC dejan de funcionar hasta que la actives de nuevo.`)) return;
+    cardAction({ action: 'update', code: card.code, active: !card.active }, card.active ? 'Tarjeta desactivada.' : 'Tarjeta activada.');
+  } else if (d.rename) {
+    const name = prompt('Nombre de la tarjeta', card.name);
+    if (name && name.trim()) cardAction({ action: 'update', code: card.code, name }, 'Nombre cambiado.');
+  } else if (d.variant) {
+    cardAction({ action: 'update', code: card.code, variant: d.to }, `Diseño cambiado a ${VARIANT[d.to].toLowerCase()}.`);
+  } else if (d.delcard) {
+    if (!confirm(`¿Borrar "${card.name}" (código ${card.code})? Si está impresa, deja de funcionar para siempre.`)) return;
+    cardAction({ action: 'delete', code: card.code }, 'Tarjeta borrada.');
   }
 });
 $('qrFullClose').addEventListener('click', () => { $('qrFull').hidden = true; });
