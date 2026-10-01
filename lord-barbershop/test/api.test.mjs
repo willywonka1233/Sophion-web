@@ -200,7 +200,7 @@ test('tarjetas con código propio: link corto, validación y cambio de destino',
   // /t/CODIGO redirige a la validación con el código de la tarjeta
   const r = await api(new Request(`https://lord.test/t/${clara.code.toUpperCase()}`));
   assert.equal(r.status, 302);
-  assert.equal(r.headers.get('location'), `/sello?c=${clara.code}`);
+  assert.equal(r.headers.get('location'), `https://lord.test/sello?c=${clara.code}`);
 
   const s = (await call('GET', '/admin/settings', { token: admin })).data.settings;
   s.validation.cooldownHours = 0;

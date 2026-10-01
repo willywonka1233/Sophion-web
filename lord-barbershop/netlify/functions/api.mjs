@@ -103,9 +103,11 @@ function parseExtUrl(v) {
   return url;
 }
 
-async function shortLink(code) {
+async function shortLink(req, code) {
   const card = (await getCards()).find((x) => x.code === code);
-  const to = card && card.active && card.target === 'url' && card.url ? card.url : `/sello?c=${encodeURIComponent(code)}`;
+  const to = card && card.active && card.target === 'url' && card.url
+    ? card.url
+    : new URL(`/sello?c=${encodeURIComponent(code)}`, req.url).href;
   return new Response(null, { status: 302, headers: { location: to, 'cache-control': 'no-store' } });
 }
 
@@ -622,14 +624,16 @@ export default async (req) => {
       let code = pathname.slice(3);
       try { code = decodeURIComponent(code); } catch { /* código mal escrito */ }
       code = code.replace(/\/+$/, '').trim().toLowerCase();
-      return await shortLink(code);
+      return await shortLink(req, code);
     }
     if (!handler) throw new HttpError(404, 'Ruta inexistente.');
     return await handler(req);
   } catch (e) {
     if (e instanceof HttpError) return json(e.status, { error: e.message, ...(e.extra || {}) });
-    console.error(e);
-    return json(500, { error: 'Algo falló de nuestro lado. Probá de nuevo en un momento.' });
+    // Código corto para encontrar el error en los registros de la función (Netlify → Logs → Functions)
+    const ref = randomBytes(4).toString('hex');
+    console.error(`[api ${ref}] ${req.method} ${pathname}`, e);
+    return json(500, { error: 'Algo falló de nuestro lado. Probá de nuevo en un momento.', ref });
   }
 };
 

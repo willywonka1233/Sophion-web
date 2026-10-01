@@ -42,24 +42,27 @@ function localStore(name) {
   };
 }
 
+// En Netlify cada pedido trae su propio contexto de Blobs (URL + token de corta duración).
+// Por eso el cliente se crea en cada operación: reutilizar uno viejo entre pedidos hace que
+// falle con credenciales vencidas cuando la función queda "tibia".
 function blobStore(name) {
-  const s = getStore({ name, consistency: 'strong' });
+  const s = () => getStore({ name, consistency: 'strong' });
   return {
     async get(key) {
-      const r = await s.getWithMetadata(key, { type: 'json' });
+      const r = await s().getWithMetadata(key, { type: 'json' });
       return r ? { data: r.data, etag: r.etag } : null;
     },
     async set(key, data, opts = {}) {
       const o = {};
       if (opts.onlyIfMatch) o.onlyIfMatch = opts.onlyIfMatch;
       else if (opts.onlyIfNew) o.onlyIfNew = true;
-      const r = await s.setJSON(key, data, o);
+      const r = await s().setJSON(key, data, o);
       return { modified: r?.modified !== false };
     },
-    async del(key) { await s.delete(key); },
+    async del(key) { await s().delete(key); },
     async keys(prefix = '') {
       const out = [];
-      for await (const page of s.list({ prefix, paginate: true })) {
+      for await (const page of s().list({ prefix, paginate: true })) {
         for (const b of page.blobs) out.push(b.key);
       }
       return out;
@@ -67,10 +70,11 @@ function blobStore(name) {
   };
 }
 
-const cache = new Map();
+const localCache = new Map();
 export function store(name) {
-  if (!cache.has(name)) cache.set(name, LOCAL_DIR ? localStore(name) : blobStore(name));
-  return cache.get(name);
+  if (!LOCAL_DIR) return blobStore(name);
+  if (!localCache.has(name)) localCache.set(name, localStore(name));
+  return localCache.get(name);
 }
 
 export class Conflict extends Error {}

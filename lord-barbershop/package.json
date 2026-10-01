@@ -5,7 +5,7 @@
   "description": "Lord Barber Shop · Coffee — web, cuentas de clientes, turnero y validación de cortes por NFC",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "test": "node --test test/api.test.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=20"
