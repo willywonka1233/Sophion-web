@@ -138,7 +138,7 @@ function renderCard() {
   $('tab-tarjeta').innerHTML = `
     <div class="hello"><div><small>Hola,</small><h1>${esc(u.name.split(' ')[0])}</h1></div><small>Socio Nº ${esc(u.memberNo)}</small></div>
     <div class="lcard">
-      <div class="lcard-top"><img src="/assets/img/emblem.png" alt="" width="28" height="36"><div><b>LORD</b><small>Club Lord</small></div>${NFC}</div>
+      <div class="lcard-top"><img src="/assets/img/emblem.png" alt="" width="28" height="36"><div><b>Tarjeta Lord</b><small>Club Lord</small></div>${NFC}</div>
       <div class="lcard-name">${esc(u.name)}<small>Socio Nº ${esc(u.memberNo)} · desde ${monthYear(u.createdAt)}</small></div>
       ${stampsHtml(u.stamps, u.goal)}
       <div class="lcard-foot"><span><b>${u.stamps}</b> / ${u.goal} cortes</span><span>${left === 1 ? 'Te falta 1' : `Te faltan ${left}`} para tu premio</span></div>

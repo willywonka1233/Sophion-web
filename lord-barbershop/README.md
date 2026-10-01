@@ -83,6 +83,7 @@ lord-barbershop/
 │       ├── app.js · lord.css    # utilidades y estilos compartidos
 │       ├── landing.* · cuenta.js · app.css · admin.*
 │       └── img/                 # logo, íconos y imagen para compartir
+├── docs/prompt-rediseno.md      # prompt de dirección de arte (estilo hueso)
 ├── scripts/dev.mjs              # servidor local
 └── test/api.test.mjs
 ```
