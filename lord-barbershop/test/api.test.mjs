@@ -12,7 +12,10 @@ delete process.env.LORD_SECRET;
 const { default: api } = await import('../netlify/functions/api.mjs');
 const { nowLocal, addDays, dowOf } = await import('../server/logic.mjs');
 
+const STAFF_PIN = '4321';
 async function call(method, p, { body, token } = {}) {
+  // Los cortes se confirman con el PIN del barbero (modo por defecto): se lo agregamos si falta.
+  if (p === '/validate' && body && !('staffPin' in body)) body = { ...body, staffPin: STAFF_PIN };
   const headers = { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
   const r = await api(new Request(`https://lord.test/api${p}`, { method, headers, body: body ? JSON.stringify(body) : undefined }));
@@ -37,6 +40,9 @@ before(async () => {
   const saved = await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
   assert.equal(saved.status, 200, JSON.stringify(saved.data));
   assert.deepEqual(saved.data.settings.barbers.map((b) => b.id), ['tomas', 'nico']);
+  const staff = await call('POST', '/admin/staff', { token: admin, body: { barberId: 'tomas', pin: STAFF_PIN } });
+  assert.equal(staff.status, 200, JSON.stringify(staff.data));
+  assert.equal(staff.data.barbers.find((b) => b.id === 'tomas').hasPin, true);
 });
 
 const day = addDays(nowLocal().date, 2);
@@ -115,7 +121,10 @@ test('validación NFC: sellos, cooldown, premio, membresía y rotación de clave
 
   // turno de hoy cargado por el barbero → la validación lo marca como hecho
   const today = nowLocal().date;
-  const manual = await call('POST', '/admin/booking', { token: admin, body: { date: today, time: '00:00', serviceId: 'corte', barberId: 'tomas', phone: '3564444444' } });
+  // el turno de la hora actual (la validación marca el turno más cercano a ahora)
+  const nowMin = Math.min(Math.floor(nowLocal().min / 5) * 5, 23 * 60);
+  const hhmm = `${String(Math.floor(nowMin / 60)).padStart(2, '0')}:${String(nowMin % 60).padStart(2, '0')}`;
+  const manual = await call('POST', '/admin/booking', { token: admin, body: { date: today, time: hhmm, serviceId: 'corte', barberId: 'tomas', phone: '3564444444', force: true } });
   assert.equal(manual.status, 200, JSON.stringify(manual.data));
 
   const v1 = await call('POST', '/validate', { token: t, body: { k: nfc.key } });
@@ -247,6 +256,140 @@ test('tarjetas con código propio: link corto, validación y cambio de destino',
   const del = await call('POST', '/admin/cards', { token: admin, body: { action: 'delete', code: 'tomas-1' } });
   assert.equal(del.data.cards.length, 2);
   assert.equal((await call('GET', '/admin/cards')).status, 401);
+});
+
+test('validación con PIN del barbero: sin PIN, incorrecto, bloqueo y quién validó', async () => {
+  const s = (await call('GET', '/admin/settings', { token: admin })).data.settings;
+  s.validation.cooldownHours = 0;
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+  const k = (await call('GET', '/admin/nfc', { token: admin })).data.key;
+  const t = (await call('POST', '/register', { body: { name: 'Gabi', phone: '3564888888', pin: '8888' } })).data.token;
+
+  const noPin = await call('POST', '/validate', { token: t, body: { k, staffPin: '' } });
+  assert.equal(noPin.status, 400);
+  assert.equal(noPin.data.need, 'pin');
+  const wrong = await call('POST', '/validate', { token: t, body: { k, staffPin: '0000' } });
+  assert.equal(wrong.status, 403);
+  assert.equal(wrong.data.attemptsLeft, 4);
+
+  const ok = await call('POST', '/validate', { token: t, body: { k } });
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+  const log = (await call('GET', '/admin/log', { token: admin })).data.log;
+  assert.equal(log[0].barber, 'Tomás');
+
+  // PIN repetido entre barberos: no se permite
+  assert.equal((await call('POST', '/admin/staff', { token: admin, body: { barberId: 'nico', pin: STAFF_PIN } })).status, 409);
+  // 5 errores → bloqueado aunque después ponga el PIN correcto
+  for (let i = 0; i < 5; i++) await call('POST', '/validate', { token: t, body: { k, staffPin: '1111' } });
+  const locked = await call('POST', '/validate', { token: t, body: { k } });
+  assert.equal(locked.status, 423);
+
+  // sin ningún PIN cargado, avisa que falta configurarlo
+  await call('POST', '/admin/staff', { token: admin, body: { barberId: 'tomas', pin: null } });
+  const t2 = (await call('POST', '/register', { body: { name: 'Hugo', phone: '3564888889', pin: '8888' } })).data.token;
+  const setup = await call('POST', '/validate', { token: t2, body: { k } });
+  assert.equal(setup.status, 409);
+  assert.equal(setup.data.need, 'setup');
+  await call('POST', '/admin/staff', { token: admin, body: { barberId: 'tomas', pin: STAFF_PIN } });
+});
+
+test('validación con aprobación desde el panel', async () => {
+  const s = (await call('GET', '/admin/settings', { token: admin })).data.settings;
+  s.validation.mode = 'approval';
+  s.validation.cooldownHours = 0;
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+  assert.equal((await call('GET', '/config')).data.settings.validation.mode, 'approval');
+  const k = (await call('GET', '/admin/nfc', { token: admin })).data.key;
+  const t = (await call('POST', '/register', { body: { name: 'Iván', phone: '3564999990', pin: '9999' } })).data.token;
+
+  const req = await call('POST', '/validate', { token: t, body: { k, staffPin: '' } });
+  assert.equal(req.status, 202, JSON.stringify(req.data));
+  const id = req.data.pending.id;
+  // pedir dos veces no duplica el pedido
+  assert.equal((await call('POST', '/validate', { token: t, body: { k } })).data.pending.id, id);
+  assert.equal((await call('GET', `/validate/status?id=${id}`, { token: t })).data.status, 'pending');
+  const pend = await call('GET', '/admin/pending', { token: admin });
+  assert.equal(pend.data.pending.length, 1);
+  assert.equal(pend.data.pending[0].name, 'Iván');
+
+  const ap = await call('POST', '/admin/pending', { token: admin, body: { id, action: 'approve' } });
+  assert.equal(ap.data.status, 'approved', JSON.stringify(ap.data));
+  assert.equal((await call('POST', '/admin/pending', { token: admin, body: { id, action: 'approve' } })).status, 409);
+  const st = await call('GET', `/validate/status?id=${id}`, { token: t });
+  assert.equal(st.data.status, 'approved');
+  assert.equal(st.data.user.stamps, 1);
+
+  const req2 = await call('POST', '/validate', { token: t, body: { k } });
+  await call('POST', '/admin/pending', { token: admin, body: { id: req2.data.pending.id, action: 'reject' } });
+  assert.equal((await call('GET', `/validate/status?id=${req2.data.pending.id}`, { token: t })).data.status, 'rejected');
+  assert.equal((await call('GET', '/me', { token: t })).data.user.stamps, 1);
+
+  s.validation.mode = 'pin';
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+});
+
+test('arreglos de la revisión: fechas, celular con 15, medianoche, qrlocal, reactivar y doble sello', async () => {
+  // fecha inexistente
+  assert.equal((await call('GET', '/slots?date=2027-02-30&service=corte')).status, 400);
+
+  // celular con 15: misma cuenta escrita de las dos formas
+  const r15 = await call('POST', '/register', { body: { name: 'Quince', phone: '3564 15 123456', pin: '1515' } });
+  assert.equal(r15.data.user.phone, '3564123456');
+  assert.equal((await call('POST', '/login', { body: { phone: '3564123456', pin: '1515' } })).status, 200);
+  assert.equal((await call('POST', '/register', { body: { name: 'Otro', phone: '03564-123456', pin: '1111' } })).status, 409);
+
+  // cierre a medianoche
+  const s = (await call('GET', '/admin/settings', { token: admin })).data.settings;
+  s.hours[5] = [['18:00', '00:00']];
+  const saved = await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+  assert.deepEqual(saved.data.settings.hours[5], [['18:00', '24:00']]);
+
+  // link de qrlocal mal escrito: se rechaza y la lista de tarjetas sigue andando
+  const card = (await call('GET', '/admin/cards', { token: admin })).data.cards[0];
+  assert.equal((await call('POST', '/admin/cards', { token: admin, body: { action: 'update', code: card.code, extUrl: 'https://qrlocal.vercel.app:lrd1/x' } })).status, 400);
+  assert.equal((await call('GET', '/admin/cards', { token: admin })).status, 200);
+
+  // reactivar un turno cancelado que ya ocupó otro → 409 (salvo que se fuerce)
+  const day = addDays(nowLocal().date, 3);
+  const a = (await call('POST', '/register', { body: { name: 'Ana R', phone: '3564111222', pin: '1212' } })).data.token;
+  const b = (await call('POST', '/register', { body: { name: 'Beto R', phone: '3564111333', pin: '1313' } })).data.token;
+  const ba = await call('POST', '/bookings', { token: a, body: { date: day, time: '09:00', serviceId: 'corte', barberId: 'tomas' } });
+  await call('POST', '/bookings/cancel', { token: a, body: { id: ba.data.booking.id } });
+  assert.equal((await call('POST', '/bookings', { token: b, body: { date: day, time: '09:00', serviceId: 'corte', barberId: 'tomas' } })).status, 200);
+  const re = await call('POST', '/admin/booking/status', { token: admin, body: { date: day, id: ba.data.booking.id, status: 'booked' } });
+  assert.equal(re.status, 409);
+  assert.equal(re.data.clash, true);
+
+  // "Listo + sumar corte" después de que el cliente ya validó con la tarjeta: no suma otro sello
+  s.validation.cooldownHours = 12;
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+  const k = (await call('GET', '/admin/nfc', { token: admin })).data.key;
+  const c = (await call('POST', '/register', { body: { name: 'Caro R', phone: '3564111444', pin: '1414' } })).data.token;
+  const bc = await call('POST', '/bookings', { token: c, body: { date: day, time: '11:00', serviceId: 'corte', barberId: 'nico' } });
+  assert.equal((await call('POST', '/validate', { token: c, body: { k } })).data.user.stamps, 1);
+  const done = await call('POST', '/admin/booking/status', { token: admin, body: { date: day, id: bc.data.booking.id, status: 'done', validate: true } });
+  assert.equal(done.data.already, true);
+  assert.equal((await call('GET', '/me', { token: c })).data.user.stamps, 1);
+
+  // bajar la cantidad de cortes del premio convierte los sellos sobrantes en premios
+  await call('POST', '/admin/client', { token: admin, body: { phone: '3564111444', action: 'stamp-add' } }); // 2 de 3
+  s.loyalty.goal = 2;
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+  const me = (await call('GET', '/me', { token: c })).data.user;
+  assert.equal(me.stamps, 0);
+  assert.equal(me.rewards, 1);
+  s.loyalty.goal = 3;
+  s.validation.cooldownHours = 0;
+  await call('POST', '/admin/settings', { token: admin, body: { settings: s } });
+});
+
+test('el bloqueo del PIN del panel es por IP', async () => {
+  const from = (ip, pin) => api(new Request('https://lord.test/api/admin/login', {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-nf-client-connection-ip': ip }, body: JSON.stringify({ pin }),
+  }));
+  for (let i = 0; i < 5; i++) await from('203.0.113.9', '0000');
+  assert.equal((await from('203.0.113.9', '9876')).status, 429);
+  assert.equal((await from('198.51.100.7', '9876')).status, 200);
 });
 
 test('bloqueo tras PIN incorrecto repetido', async () => {

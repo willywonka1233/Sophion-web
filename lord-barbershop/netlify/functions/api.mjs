@@ -9,7 +9,7 @@ import {
 import {
   getSettings, sanitizeSettings, computeSlots, nowLocal, isDate, isHHMM, toMin, toHHMM,
   epochOf, isActive, bookingView, syncUserBooking, applyCut, publicUser, pushHistory,
-  addLog, normalizePhone, membershipActive,
+  addLog, normalizePhone, legacyPhone, membershipActive, normalizeStamps,
 } from '../../server/logic.mjs';
 
 const DAY = 24 * 3600e3;
@@ -86,8 +86,10 @@ function cardView(req, c) {
   const link = `${new URL(req.url).origin}/t/${c.code}`;
   let printCode = c.code;
   if (c.extUrl) {
-    const seg = new URL(c.extUrl).pathname.split('/').filter(Boolean).pop();
-    if (seg) { try { printCode = decodeURIComponent(seg); } catch { printCode = seg; } }
+    try {
+      const seg = new URL(c.extUrl).pathname.split('/').filter(Boolean).pop();
+      if (seg) { try { printCode = decodeURIComponent(seg); } catch { printCode = seg; } }
+    } catch { /* link mal formado: se imprime el código propio */ }
   }
   return { ...c, link, qr: c.extUrl || link, printCode };
 }
@@ -97,9 +99,9 @@ function parseExtUrl(v) {
   const raw = String(v ?? '').trim();
   if (!raw) return '';
   const url = /^[a-z0-9_-]{2,40}$/i.test(raw) ? QR_SERVICE + raw : raw;
-  if (!/^https:\/\/[^\s/]+\/\S+$/i.test(url) || url.length > 300) {
-    throw new HttpError(400, `Pegá el código de qrlocal (ej: lrd1) o el link completo (ej: ${QR_SERVICE}lrd1).`);
-  }
+  let ok = /^https:\/\/[^\s/]+\/\S+$/i.test(url) && url.length <= 300;
+  if (ok) { try { ok = new URL(url).protocol === 'https:'; } catch { ok = false; } }
+  if (!ok) throw new HttpError(400, `Pegá el código de qrlocal (ej: lrd1) o el link completo (ej: ${QR_SERVICE}lrd1).`);
   return url;
 }
 
@@ -109,6 +111,154 @@ async function shortLink(req, code) {
     ? card.url
     : new URL(`/sello?c=${encodeURIComponent(code)}`, req.url).href;
   return new Response(null, { status: 302, headers: { location: to, 'cache-control': 'no-store' } });
+}
+
+async function staffView() {
+  const pins = (await getJSON('meta', 'staffpins')) || {};
+  const settings = await getSettings();
+  return { mode: settings.validation.mode, barbers: settings.barbers.map((x) => ({ id: x.id, name: x.name, hasPin: !!pins[x.id] })) };
+}
+
+// Busca la cuenta por celular (forma actual o la anterior, que guardaba el 15).
+async function findUser(rawPhone) {
+  const p = normalizePhone(rawPhone);
+  if (!p) return null;
+  const u = await getJSON('users', p);
+  if (u) return u;
+  const old = legacyPhone(rawPhone);
+  return old && old !== p ? getJSON('users', old) : null;
+}
+
+// Turno de hoy que corresponde a un corte hecho ahora: el más cercano a la hora actual,
+// desde 1 h antes de que empiece hasta 2 h después de que termine.
+function bookingForNow(bookings, today) {
+  const now = nowLocal().min;
+  return (bookings || [])
+    .filter((y) => y.date === today && y.status === 'booked' && now >= toMin(y.start) - 60 && now <= toMin(y.end) + 120)
+    .sort((p, q) => Math.abs(now - toMin(p.start)) - Math.abs(now - toMin(q.start)))[0];
+}
+
+// ---------- validación del corte ----------
+const PENDING_TTL = 10 * 60e3;
+
+// Revisa la credencial que viene del QR/NFC: código de tarjeta (c) o clave del link directo (k).
+async function checkCredential(b) {
+  if (b.c) {
+    const code = String(b.c).trim().toLowerCase();
+    const card = (await getCards()).find((x) => x.code === code);
+    if (!card || !card.active) throw new HttpError(403, 'Esta tarjeta no existe o fue desactivada. Pedile al barbero la nueva.');
+    if (card.target !== 'validate') throw new HttpError(403, 'Esta tarjeta no está configurada para validar cortes.');
+    return card;
+  }
+  const nfc = await getNfc();
+  if (!b.k || !safeEqual(String(b.k), nfc.key)) {
+    throw new HttpError(403, 'Este código NFC ya no es válido. Pedile al barbero que te muestre el nuevo.');
+  }
+  return null;
+}
+
+function cooldownUntil(u, settings) {
+  const cd = settings.validation.cooldownHours * 3600e3;
+  return cd && u.lastCutAt && Date.now() - u.lastCutAt < cd ? u.lastCutAt + cd : 0;
+}
+
+// PIN de validación de cada barbero (distinto del PIN del panel). Se guarda hasheado y nunca se publica.
+async function checkStaffPin(u, rawPin, settings) {
+  const pins = (await getJSON('meta', 'staffpins')) || {};
+  const barbers = settings.barbers.filter((x) => pins[x.id]);
+  if (!barbers.length) {
+    throw new HttpError(409, 'El local todavía no configuró el PIN de validación. Avisale al barbero.', { need: 'setup' });
+  }
+  const pin = String(rawPin ?? '').trim();
+  if (!pin) throw new HttpError(400, 'Pasale el celu al barbero para que ponga su PIN.', { need: 'pin' });
+  if (u.staffLockUntil && Date.now() < u.staffLockUntil) {
+    const mins = Math.ceil((u.staffLockUntil - Date.now()) / 60e3);
+    throw new HttpError(423, `Demasiados intentos con PIN incorrecto. Probá de nuevo en ${mins} min.`, { need: 'pin' });
+  }
+  const thr = await getJSON('meta', 'pinthrottle');
+  if (thr?.until && Date.now() < thr.until) {
+    throw new HttpError(423, 'Hubo demasiados intentos con PIN incorrecto. Esperá unos minutos.', { need: 'pin' });
+  }
+  if (/^\d{4,6}$/.test(pin)) {
+    for (const bb of barbers) {
+      if (await checkPin(pin, pins[bb.id].salt, pins[bb.id].hash)) return bb;
+    }
+  }
+  const x = await update('users', u.phone, (y) => {
+    if (!y) return undefined;
+    y.staffFails = (y.staffFails || 0) + 1;
+    const ms = lockMsFor(y.staffFails);
+    if (ms) y.staffLockUntil = Date.now() + ms;
+    return y;
+  });
+  await update('meta', 'pinthrottle', (t) => {
+    const now = Date.now();
+    const cur = t && now - t.start < 10 * 60e3 ? t : { start: now, count: 0 };
+    cur.count += 1;
+    if (cur.count >= 40) cur.until = now + 10 * 60e3;
+    return cur;
+  });
+  const fails = x?.staffFails || 0;
+  if (lockMsFor(fails)) throw new HttpError(423, 'Demasiados intentos con PIN incorrecto. Probá de nuevo en 15 min.', { need: 'pin' });
+  throw new HttpError(403, 'PIN del barbero incorrecto.', { need: 'pin', attemptsLeft: 5 - (fails % 5) });
+}
+
+// Registra el corte: cooldown, sello/membresía/premio, turno del día, uso de la tarjeta y registro.
+async function performCut(phone, settings, { useReward = false, card = null, barber = null }) {
+  const today = nowLocal().date;
+  let result;
+  let booking;
+  const fresh = await update('users', phone, (x) => {
+    if (!x) throw new HttpError(404, 'El cliente ya no existe.');
+    const next = cooldownUntil(x, settings);
+    if (next) throw new HttpError(429, 'Ya validaste un corte hace poco.', { nextAt: next });
+    result = applyCut(x, settings, { useReward, via: 'nfc', note: barber?.name });
+    delete x.staffFails;
+    delete x.staffLockUntil;
+    booking = bookingForNow(x.bookings, today);
+    if (booking) { booking.status = 'done'; booking.validated = true; }
+    return x;
+  });
+  if (booking) {
+    await update('bookings', today, (doc) => {
+      const it = doc?.items?.find((y) => y.id === booking.id);
+      if (!it) return undefined;
+      it.status = 'done';
+      it.validated = true;
+      return doc;
+    });
+  }
+  if (card) {
+    await update('meta', 'cards', (cs) => {
+      const x = cs?.find((y) => y.code === card.code);
+      if (!x) return undefined;
+      x.uses = (x.uses || 0) + 1;
+      x.lastUsedAt = Date.now();
+      return cs;
+    });
+  }
+  await addLog({ phone, name: fresh.name, type: result.type, earned: result.earned, via: 'nfc', card: card?.name || null, barber: barber?.name || null });
+  return { result, fresh };
+}
+
+// Modo 'approval': el pedido queda pendiente hasta que el barbero lo aprueba en el panel.
+async function createPending(u, card, useReward) {
+  let id;
+  await update('meta', 'pending', (list) => {
+    const now = Date.now();
+    list = (list || []).filter((p) => now - p.createdAt < 3600e3).slice(-80);
+    const open = list.find((p) => p.phone === u.phone && p.status === 'pending' && now - p.createdAt < PENDING_TTL);
+    if (open) {
+      open.useReward = useReward;
+      if (card) open.card = { code: card.code, name: card.name };
+      id = open.id;
+      return list;
+    }
+    id = randomKey(10);
+    list.push({ id, phone: u.phone, name: u.name, useReward, card: card ? { code: card.code, name: card.name } : null, createdAt: now, status: 'pending' });
+    return list;
+  });
+  return id;
 }
 
 // ---------- turnos ----------
@@ -156,7 +306,7 @@ const routes = {
     if (name.length < 2) throw new HttpError(400, 'Escribí tu nombre.');
     if (phone.length < 8 || phone.length > 13) throw new HttpError(400, 'Revisá el número: código de área + número, sin 0 ni 15.');
     if (!/^\d{4}$/.test(pin)) throw new HttpError(400, 'El PIN tiene que ser de 4 números.');
-    if (await getJSON('users', phone)) throw new HttpError(409, 'Ya hay una cuenta con ese número. Ingresá con tu PIN.');
+    if (await findUser(b.phone)) throw new HttpError(409, 'Ya hay una cuenta con ese número. Ingresá con tu PIN.');
     const n = await update('meta', 'counter', (c) => (c || 0) + 1);
     const { salt, hash } = await hashPin(pin);
     const u = {
@@ -172,9 +322,9 @@ const routes = {
 
   'POST /login': async (req) => {
     const b = await body(req);
-    const phone = normalizePhone(b.phone);
     const pin = String(b.pin || '');
-    const u = phone && await getJSON('users', phone);
+    const u = await findUser(b.phone);
+    const phone = u?.phone;
     if (!u) throw new HttpError(404, 'No encontramos una cuenta con ese número. ¿Querés crear una?');
     if (u.lockUntil && Date.now() < u.lockUntil) {
       const mins = Math.ceil((u.lockUntil - Date.now()) / 60e3);
@@ -236,6 +386,12 @@ const routes = {
     });
     await syncUserBooking(u.phone, created);
     const fresh = await getJSON('users', u.phone);
+    // Si llegaron varias reservas a la vez y se pasó del límite, se deshace esta.
+    const active = (fresh.bookings || []).filter((x) => x.status === 'booked' && epochOf(x.date, x.end) > Date.now());
+    if (active.length > settings.maxActiveBookings) {
+      await setBookingStatus(created.date, created.id, { status: 'cancelled', cancelledBy: 'limit' });
+      throw new HttpError(409, `Ya tenés ${settings.maxActiveBookings} turno(s) reservado(s). Cancelá uno para sacar otro.`);
+    }
     return json(200, { booking: bookingView(created), user: publicUser(fresh, settings) });
   },
 
@@ -255,79 +411,76 @@ const routes = {
     return json(200, { user: publicUser(fresh, settings) });
   },
 
-  // Validación del corte: el cliente apoya el celular en el tag NFC del barbero,
-  // que abre /sello?k=CLAVE, y la página llama a este endpoint.
+  // Validación del corte. El cliente abre /sello?c=CODIGO (tarjeta) o /sello?k=CLAVE (link directo)
+  // y la página llama acá. Para que copiar el link no alcance, se confirma según Ajustes:
+  //  - 'pin': el barbero pone su PIN de validación en el celu del cliente.
+  //  - 'approval': queda pendiente hasta que el barbero lo aprueba en el panel.
   'POST /validate': async (req) => {
     const { u } = await requireUser(req);
     const b = await body(req);
-    let card = null;
-    if (b.c) {
-      const code = String(b.c).trim().toLowerCase();
-      card = (await getCards()).find((x) => x.code === code);
-      if (!card || !card.active) throw new HttpError(403, 'Esta tarjeta no existe o fue desactivada. Pedile al barbero la nueva.');
-      if (card.target !== 'validate') throw new HttpError(403, 'Esta tarjeta no está configurada para validar cortes.');
-    } else {
-      const nfc = await getNfc();
-      if (!b.k || !safeEqual(b.k, nfc.key)) {
-        throw new HttpError(403, 'Este código NFC ya no es válido. Pedile al barbero que te muestre el nuevo.');
-      }
-    }
+    const card = await checkCredential(b);
     const settings = await getSettings();
-    const cd = settings.validation.cooldownHours * 3600e3;
-    const today = nowLocal().date;
-    let result;
-    let booking;
-    const fresh = await update('users', u.phone, (x) => {
-      if (!x) throw new HttpError(401, 'Tu sesión venció. Ingresá de nuevo.');
-      if (cd && x.lastCutAt && Date.now() - x.lastCutAt < cd) {
-        throw new HttpError(429, 'Ya validaste un corte hace poco.', { nextAt: x.lastCutAt + cd });
-      }
-      result = applyCut(x, settings, { useReward: !!b.useReward, via: 'nfc' });
-      booking = (x.bookings || [])
-        .filter((y) => y.date === today && y.status === 'booked')
-        .sort((p, q) => p.start.localeCompare(q.start))[0];
-      if (booking) { booking.status = 'done'; booking.validated = true; }
-      return x;
-    });
-    if (booking) {
-      await update('bookings', today, (doc) => {
-        const it = doc?.items?.find((y) => y.id === booking.id);
-        if (!it) return undefined;
-        it.status = 'done';
-        it.validated = true;
-        return doc;
-      });
+    const next = cooldownUntil(u, settings);
+    if (next) throw new HttpError(429, 'Ya validaste un corte hace poco.', { nextAt: next });
+    const useReward = b.useReward === true;
+    if (useReward && !(normalizeStamps({ ...u }, settings.loyalty.goal).rewards > 0)) {
+      throw new HttpError(400, 'No tenés premios disponibles para canjear.');
     }
-    if (card) {
-      await update('meta', 'cards', (cs) => {
-        const x = cs?.find((y) => y.code === card.code);
-        if (!x) return undefined;
-        x.uses = (x.uses || 0) + 1;
-        x.lastUsedAt = Date.now();
-        return cs;
-      });
+    if (settings.validation.mode === 'approval') {
+      const id = await createPending(u, card, useReward);
+      return json(202, { pending: { id } });
     }
-    await addLog({ phone: u.phone, name: u.name, type: result.type, earned: result.earned, via: 'nfc', card: card?.name || null });
+    const barber = await checkStaffPin(u, b.staffPin, settings);
+    const { result, fresh } = await performCut(u.phone, settings, { useReward, card, barber });
     return json(200, { result, user: publicUser(fresh, settings) });
+  },
+
+  // El cliente consulta si el barbero ya aprobó su pedido (modo 'approval').
+  'GET /validate/status': async (req) => {
+    const { u } = await requireUser(req);
+    const id = new URL(req.url).searchParams.get('id');
+    const p = ((await getJSON('meta', 'pending')) || []).find((x) => x.id === id && x.phone === u.phone);
+    if (!p) throw new HttpError(404, 'No encontramos el pedido. Volvé a apoyar el celu.');
+    const status = p.status === 'pending' && Date.now() - p.createdAt > PENDING_TTL ? 'expired' : p.status === 'approving' ? 'pending' : p.status;
+    const out = { status };
+    if (status === 'approved') {
+      const settings = await getSettings();
+      out.result = p.result;
+      out.user = publicUser(await getJSON('users', u.phone), settings);
+    }
+    if (status === 'rejected' || status === 'failed') out.error = p.error || 'El barbero no aprobó el corte.';
+    return json(200, out);
   },
 
   // ---- panel del barbero ----
   'POST /admin/login': async (req) => {
     if (!process.env.ADMIN_PIN) throw new HttpError(503, 'Falta configurar ADMIN_PIN en Netlify (Site configuration → Environment variables).');
     const b = await body(req);
-    const lock = await getJSON('meta', 'adminlock');
-    if (lock?.until && Date.now() < lock.until) {
-      throw new HttpError(429, `Demasiados intentos. Esperá ${Math.ceil((lock.until - Date.now()) / 60e3)} min.`);
+    // Bloqueo por IP: un desconocido no puede dejar afuera al barbero. Hay además un tope global alto.
+    const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'local')
+      .split(',')[0].trim().replace(/[^a-zA-Z0-9.:-]/g, '_').slice(0, 64);
+    const lockKey = `adminlock-${ip}`;
+    const [lock, global] = await Promise.all([getJSON('meta', lockKey), getJSON('meta', 'adminlock-all')]);
+    const until = Math.max(lock?.until || 0, global?.until || 0);
+    if (until && Date.now() < until) {
+      throw new HttpError(429, `Demasiados intentos. Esperá ${Math.ceil((until - Date.now()) / 60e3)} min.`);
     }
     if (!safeEqual(String(b.pin || ''), process.env.ADMIN_PIN)) {
-      await update('meta', 'adminlock', (l) => {
+      await update('meta', lockKey, (l) => {
         const fails = (l?.fails || 0) + 1;
         const ms = lockMsFor(fails);
         return { fails, until: ms ? Date.now() + ms : 0 };
       });
+      await update('meta', 'adminlock-all', (g) => {
+        const now = Date.now();
+        const cur = g && now - g.start < 15 * 60e3 ? g : { start: now, fails: 0 };
+        cur.fails += 1;
+        if (cur.fails >= 60) cur.until = now + 15 * 60e3;
+        return cur;
+      });
       throw new HttpError(401, 'PIN incorrecto.');
     }
-    if (lock?.fails) await store('meta').set('adminlock', { fails: 0, until: 0 });
+    if (lock?.fails) await store('meta').set(lockKey, { fails: 0, until: 0 });
     return json(200, { token: await signToken({ r: 'a', v: adminVersion(), iat: Date.now(), exp: Date.now() + ADMIN_TTL }) });
   },
 
@@ -409,21 +562,31 @@ const routes = {
     const it = doc?.items?.find((x) => x.id === b.id);
     if (!it) throw new HttpError(404, 'No encontramos ese turno.');
     let result = null;
+    let already = false;
     const patch = { status: b.status };
+    // Reactivar un turno cancelado o ausente: que no se pise con otro que se reservó en ese horario.
+    if (b.status === 'booked' && ['cancelled', 'noshow'].includes(it.status) && !b.force) {
+      const clash = doc.items.filter((x) => x.id !== it.id && isActive(x) && x.status !== 'noshow').find((x) =>
+        (!it.barberId || !x.barberId || x.barberId === it.barberId) && toMin(it.start) < toMin(x.end) && toMin(x.start) < toMin(it.end));
+      if (clash) {
+        throw new HttpError(409, `Se pisa con ${clash.kind === 'block' ? 'un bloqueo' : clash.name} (${clash.start}).`, { clash: true });
+      }
+    }
     // "Completar y sumar corte": registra el corte en la tarjeta del cliente (una sola vez por turno).
+    // Si el cliente ya validó su corte con la tarjeta hace un rato, no se suma otro.
     if (b.status === 'done' && b.validate && it.phone && !it.validated) {
       await update('users', it.phone, (u) => {
         if (!u) return undefined; // el cliente se eliminó: se marca el turno igual, sin sumar corte
+        const cd = settings.validation.cooldownHours * 3600e3;
+        if (cd && u.lastCutAt && Date.now() - u.lastCutAt < cd) { already = true; return undefined; }
         result = applyCut(u, settings, { useReward: !!b.useReward, via: 'admin' });
         return u;
       });
-      if (result) {
-        patch.validated = true;
-        await addLog({ phone: it.phone, name: it.name, type: result.type, earned: result.earned, via: 'admin' });
-      }
+      if (result) await addLog({ phone: it.phone, name: it.name, type: result.type, earned: result.earned, via: 'admin' });
+      if (result || already) patch.validated = true;
     }
     const item = await setBookingStatus(b.date, b.id, patch);
-    return json(200, { booking: item, result });
+    return json(200, { booking: item, result, already });
   },
 
   'GET /admin/clients': async (req) => {
@@ -594,6 +757,79 @@ const routes = {
       return cs;
     });
     return json(200, { cards: cards.map((c) => cardView(req, c)) });
+  },
+
+  'GET /admin/pending': async (req) => {
+    await requireAdmin(req);
+    const now = Date.now();
+    const list = ((await getJSON('meta', 'pending')) || [])
+      .filter((p) => (p.status === 'pending' || p.status === 'approving') && now - p.createdAt < PENDING_TTL)
+      .map(({ id, name, phone, useReward, card, createdAt }) => ({ id, name, phone, useReward, card, createdAt }));
+    return json(200, { pending: list });
+  },
+
+  'POST /admin/pending': async (req) => {
+    await requireAdmin(req);
+    const b = await body(req);
+    if (!['approve', 'reject'].includes(b.action)) throw new HttpError(400, 'Acción inválida.');
+    let item;
+    // Se marca primero, así dos aprobaciones al mismo tiempo no suman dos cortes.
+    await update('meta', 'pending', (list) => {
+      const p = (list || []).find((x) => x.id === b.id);
+      if (!p || p.status !== 'pending' || Date.now() - p.createdAt > PENDING_TTL) {
+        throw new HttpError(409, 'Ese pedido ya no está pendiente.');
+      }
+      p.status = b.action === 'approve' ? 'approving' : 'rejected';
+      p.decidedAt = Date.now();
+      item = { ...p };
+      return list;
+    });
+    if (b.action === 'reject') return json(200, { status: 'rejected' });
+    const settings = await getSettings();
+    let outcome;
+    try {
+      const { result } = await performCut(item.phone, settings, { useReward: item.useReward, card: item.card });
+      outcome = { status: 'approved', result };
+    } catch (e) {
+      if (!(e instanceof HttpError)) throw e;
+      outcome = { status: 'failed', error: e.message };
+    }
+    await update('meta', 'pending', (list) => {
+      const p = (list || []).find((x) => x.id === item.id);
+      if (!p) return undefined;
+      Object.assign(p, outcome);
+      return list;
+    });
+    return json(200, { ...outcome, name: item.name });
+  },
+
+  'GET /admin/staff': async (req) => {
+    await requireAdmin(req);
+    return json(200, await staffView());
+  },
+
+  'POST /admin/staff': async (req) => {
+    await requireAdmin(req);
+    const b = await body(req);
+    const settings = await getSettings();
+    const barber = settings.barbers.find((x) => x.id === b.barberId);
+    if (!barber) throw new HttpError(400, 'Guardá primero el barbero en Ajustes.');
+    const pin = b.pin == null ? '' : String(b.pin).trim();
+    if (pin && !/^\d{4,6}$/.test(pin)) throw new HttpError(400, 'El PIN tiene que tener de 4 a 6 números.');
+    const pins = (await getJSON('meta', 'staffpins')) || {};
+    if (pin) {
+      for (const [id, v] of Object.entries(pins)) {
+        if (id !== barber.id && await checkPin(pin, v.salt, v.hash)) throw new HttpError(409, 'Ese PIN ya lo usa otro barbero. Elegí uno distinto.');
+      }
+    }
+    const hashed = pin ? await hashPin(pin) : null;
+    await update('meta', 'staffpins', (cur) => {
+      const next = { ...(cur || {}) };
+      if (hashed) next[barber.id] = { ...hashed, updatedAt: Date.now() };
+      else delete next[barber.id];
+      return next;
+    });
+    return json(200, await staffView());
   },
 
   'GET /admin/log': async (req) => {

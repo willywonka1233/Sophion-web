@@ -36,6 +36,14 @@ Todo corre en Netlify: páginas estáticas + una Netlify Function (`/api/*`) + N
    - Se pueden crear más tarjetas (**+ Nueva tarjeta**), renombrarlas, cambiarles el diseño, desactivarlas o borrarlas.
 4. Para mostrar el QR de una tarjeta en el celu del barbero: **QR en pantalla**.
 
+## Validación de cortes: PIN del barbero o aprobación
+
+El link de la tarjeta (QR/NFC) se puede copiar, así que **cada corte se confirma** según **Ajustes → Validación de cortes**:
+
+- **PIN del barbero** (por defecto): al apoyar el celu, al cliente le aparece "Pasale el celu al barbero" y el barbero pone **su PIN de validación** (4 a 6 números) en ese celu. Cada barbero tiene el suyo (se carga en la misma sección de Ajustes, es distinto del PIN del panel y nunca se muestra). Queda registrado quién validó. Con 5 errores el cliente queda bloqueado 15 min.
+  ⚠️ **Hay que cargar el PIN de cada barbero**: sin ninguno cargado, los clientes no pueden validar.
+- **Aprobación desde el panel**: al cliente le queda "Esperando al barbero…" y en el panel aparece arriba "Fulano quiere sumar un corte → Aprobar / Rechazar" (el panel tiene que estar abierto; el pedido vence a los 10 min).
+
 ## Cómo funciona la validación
 
 - Cada tarjeta tiene su código y su link `https://TU-SITIO/t/CÓDIGO`, que redirige a `/sello?c=CÓDIGO` mientras la tarjeta esté configurada para validar. (También sigue funcionando el link directo con clave `/sello?k=CLAVE`, en **NFC → Avanzado**.)

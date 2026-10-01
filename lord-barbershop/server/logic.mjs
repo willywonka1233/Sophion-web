@@ -12,8 +12,11 @@ export function nowLocal(ts = Date.now()) {
   const d = new Date(ts + OFFSET_MIN * 60e3);
   return { date: d.toISOString().slice(0, 10), min: d.getUTCHours() * 60 + d.getUTCMinutes() };
 }
-export const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s + 'T12:00:00Z'));
+export const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
+  && !Number.isNaN(Date.parse(s + 'T12:00:00Z')) && new Date(s + 'T12:00:00Z').toISOString().slice(0, 10) === s;
 export const isHHMM = (s) => typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+// Fin de franja: también acepta "24:00" (cerrar a medianoche).
+const isRangeEnd = (s) => isHHMM(s) || s === '24:00';
 export const toMin = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
 export const toHHMM = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 export const dowOf = (date) => new Date(date + 'T12:00:00Z').getUTCDay();
@@ -105,12 +108,16 @@ export function sanitizeSettings(input) {
         perks: (Array.isArray(x.perks) ? x.perks : String(x.perks || '').split('\n')).map((p) => str(p, 80)).filter(Boolean).slice(0, 8),
       }))
       .filter((x) => x.name).slice(0, 10)),
-    validation: { cooldownHours: int(i.validation?.cooldownHours, 0, 72, d.validation.cooldownHours) },
+    validation: {
+      cooldownHours: int(i.validation?.cooldownHours, 0, 72, d.validation.cooldownHours),
+      mode: ['pin', 'approval'].includes(i.validation?.mode) ? i.validation.mode : d.validation.mode,
+    },
   };
   for (let day = 0; day < 7; day++) {
-    const ranges = Array.isArray(i.hours?.[day]) ? i.hours[day] : [];
+    const ranges = (Array.isArray(i.hours?.[day]) ? i.hours[day] : [])
+      .map((r) => (Array.isArray(r) && r[1] === '00:00' && r[0] !== '00:00' ? [r[0], '24:00'] : r));
     out.hours[day] = ranges
-      .filter((r) => Array.isArray(r) && isHHMM(r[0]) && isHHMM(r[1]) && toMin(r[0]) < toMin(r[1]))
+      .filter((r) => Array.isArray(r) && isHHMM(r[0]) && isRangeEnd(r[1]) && toMin(r[0]) < toMin(r[1]))
       .slice(0, 3)
       .sort((a, b) => toMin(a[0]) - toMin(b[0]));
   }
@@ -137,7 +144,8 @@ export function computeSlots(settings, date, items, duration, barberId = 'any', 
   const out = [];
   for (const [a, b] of settings.hours[dowOf(date)]) {
     for (let t = toMin(a); t + duration <= toMin(b); t += step) {
-      if (date === now.date && t < now.min + settings.minLeadMinutes) continue;
+      if (date === now.date && t < now.min) continue;
+      if (epochOf(date, toHHMM(t)) < Date.now() + settings.minLeadMinutes * 60e3) continue;
       const free = barbers.filter((bid) => !busy.some((it) =>
         (!it.barberId || it.barberId === bid) && overlaps(t, t + duration, toMin(it.start), toMin(it.end))));
       if (free.length) out.push({ time: toHHMM(t), barbers: free });
@@ -173,10 +181,20 @@ export function pushHistory(u, entry) {
   u.history = [{ at: Date.now(), ...entry }, ...(u.history || [])].slice(0, 80);
 }
 
+// Si el barbero bajó la cantidad de cortes del premio, convierte los sellos sobrantes en premios.
+export function normalizeStamps(u, goal) {
+  if ((u.stamps || 0) >= goal) {
+    u.rewards = (u.rewards || 0) + Math.floor(u.stamps / goal);
+    u.stamps %= goal;
+  }
+  return u;
+}
+
 // Registra un corte: usa premio si se pidió, si no descuenta de la membresía activa,
 // y si no suma un sello (cada `goal` sellos se gana un premio).
-export function applyCut(u, settings, { useReward = false, via = 'nfc' } = {}) {
+export function applyCut(u, settings, { useReward = false, via = 'nfc', note } = {}) {
   const goal = settings.loyalty.goal;
+  normalizeStamps(u, goal);
   let type;
   let earned = false;
   if (useReward) {
@@ -191,18 +209,18 @@ export function applyCut(u, settings, { useReward = false, via = 'nfc' } = {}) {
     u.stamps = (u.stamps || 0) + 1;
     type = 'stamp';
     if (u.stamps >= goal) {
-      u.stamps -= goal;
-      u.rewards = (u.rewards || 0) + 1;
+      normalizeStamps(u, goal);
       earned = true;
     }
   }
   u.visits = (u.visits || 0) + 1;
   u.lastCutAt = Date.now();
-  pushHistory(u, { type, via, earned });
+  pushHistory(u, { type, via, earned, ...(note ? { note } : {}) });
   return { type, earned };
 }
 
-export function publicUser(u, settings) {
+export function publicUser(raw, settings) {
+  const u = normalizeStamps({ ...raw }, settings.loyalty.goal);
   const now = Date.now();
   const m = u.membership;
   const cd = settings.validation.cooldownHours * 3600e3;
@@ -233,7 +251,19 @@ export async function addLog(entry) {
   await update('meta', 'log', (log) => [{ at: Date.now(), ...entry }, ...(log || [])].slice(0, 300));
 }
 
+// Forma canónica de un celular argentino: código de área + número (10 dígitos), sin 0, 15 ni +54 9.
 export function normalizePhone(raw) {
+  let p = legacyPhone(raw);
+  if (p.length === 12) {
+    // "3564 15 123456", "351 15 1234567", "11 15 12345678": se saca el 15 que va después del área
+    for (const k of [4, 3, 2]) {
+      if (p.slice(k, k + 2) === '15') { p = p.slice(0, k) + p.slice(k + 2); break; }
+    }
+  }
+  return p;
+}
+// Normalización anterior (sin sacar el 15): para encontrar cuentas creadas antes del cambio.
+export function legacyPhone(raw) {
   let p = String(raw ?? '').replace(/\D/g, '');
   if (p.startsWith('549')) p = p.slice(3);
   else if (p.startsWith('54') && p.length > 11) p = p.slice(2);

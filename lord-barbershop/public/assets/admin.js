@@ -26,6 +26,7 @@ function showLogin(msg) {
   setTimeout(() => $('admPin').focus(), 50);
 }
 function logout(msg) {
+  clearInterval(pendTimer);
   token = null;
   store.set('lord.admin', null);
   closeModal();
@@ -51,7 +52,7 @@ async function boot() {
   try {
     settings = (await call('GET', '/admin/settings')).settings;
   } catch (e) {
-    if (token) toast(e.message, 'bad');
+    if (token) showLogin(`No se pudo abrir el panel: ${e.message}`);
     return;
   }
   $('vLogin').hidden = true;
@@ -59,7 +60,54 @@ async function boot() {
   $('admTabs').hidden = false;
   $('admLogout').hidden = false;
   setTab(tab);
+  startPendingPoll();
 }
+
+// ================= pedidos pendientes (modo "aprobación desde el panel") =================
+const baseTitle = document.title;
+let pendTimer = null;
+let lastPend = 0;
+function startPendingPoll() {
+  clearInterval(pendTimer);
+  if (!token || settings?.validation?.mode !== 'approval') { renderPending([]); return; }
+  const tick = async () => {
+    if (!token || document.hidden) return;
+    try { renderPending((await call('GET', '/admin/pending')).pending); } catch { /* reintenta en el próximo ciclo */ }
+  };
+  tick();
+  pendTimer = setInterval(tick, 4000);
+}
+function renderPending(list) {
+  const bar = $('pendingBar');
+  document.title = list.length ? `(${list.length}) ${baseTitle}` : baseTitle;
+  if (list.length > lastPend) navigator.vibrate?.(200);
+  lastPend = list.length;
+  if (!list.length) { bar.hidden = true; bar.innerHTML = ''; return; }
+  bar.hidden = false;
+  bar.innerHTML = list.map((p) => `<div class="pend">
+      <div class="pend-txt"><b>${esc(p.name)}</b> quiere ${p.useReward ? 'canjear su premio' : 'sumar un corte'}
+        <small>${p.card ? `${esc(p.card.name)} · ` : ''}${esc(fmtTs(p.createdAt))}</small></div>
+      <div class="pend-act">
+        <button class="btn btn-gold btn-sm" data-pend="approve" data-id="${esc(p.id)}">Aprobar</button>
+        <button class="btn btn-line btn-sm" data-pend="reject" data-id="${esc(p.id)}">Rechazar</button>
+      </div>
+    </div>`).join('');
+}
+$('pendingBar').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-pend]');
+  if (!b) return;
+  b.closest('.pend').querySelectorAll('button').forEach((x) => { x.disabled = true; });
+  try {
+    const r = await call('POST', '/admin/pending', { id: b.dataset.id, action: b.dataset.pend });
+    if (r.status === 'approved') toast(cutMsg(r.result, r.name), 'ok');
+    else if (r.status === 'failed') toast(r.error, 'bad');
+    else toast('Pedido rechazado.');
+  } catch (err) {
+    toast(err.message, 'bad');
+  }
+  try { renderPending((await call('GET', '/admin/pending')).pending); } catch { /* nada */ }
+  if (tab === 'agenda') loadDay(false);
+});
 
 // ================= pestañas =================
 function setTab(t) {
@@ -198,9 +246,19 @@ $('tab-agenda').addEventListener('click', async (e) => {
   if (act === 'cancelled' && !confirm(`¿Cancelar el turno de ${item.name} (${item.start})?`)) return;
   if (act === 'delete' && !confirm('¿Borrar definitivamente de la agenda?')) return;
   btn.disabled = true;
+  const send = (force) => call('POST', '/admin/booking/status', { date: ag.date, id: btn.dataset.id, status: act, validate: act === 'done', force });
   try {
-    const r = await call('POST', '/admin/booking/status', { date: ag.date, id: btn.dataset.id, status: act, validate: act === 'done' });
-    if (act === 'done') toast(item.phone ? cutMsg(r.result, item.name) : 'Turno marcado como realizado.', 'ok');
+    let r;
+    try {
+      r = await send(false);
+    } catch (err) {
+      if (!(err.data?.clash && confirm(`${err.message}\n¿Reactivarlo igual?`))) throw err;
+      r = await send(true);
+    }
+    if (act === 'done') {
+      toast(!item.phone ? 'Turno marcado como realizado.'
+        : r.already ? `${item.name} ya había validado su corte con la tarjeta.` : cutMsg(r.result, item.name), 'ok');
+    }
     await loadDay(false);
   } catch (err) {
     toast(err.message, 'bad');
@@ -515,7 +573,8 @@ async function renderNfc() {
         <div class="panel stack">
           <h3 class="display" style="font-size:20px">Seguridad</h3>
           <ul class="tips">
-            <li>Cada cliente puede validar un corte cada <b>${settings.validation.cooldownHours} h</b> (se cambia en Ajustes).</li>
+            <li>Cada corte se confirma ${settings.validation.mode === 'approval' ? 'con tu <b>aprobación desde el panel</b>' : 'con el <b>PIN del barbero</b> en el celu del cliente'}: copiar el link de la tarjeta no alcanza (se cambia en Ajustes → Validación de cortes).</li>
+            <li>Cada cliente puede validar un corte cada <b>${settings.validation.cooldownHours} h</b>.</li>
             <li>Si una tarjeta se pierde o sospechás que alguien usa su link sin venir, <b>desactivala</b> y creá una nueva.</li>
             <li>Cambiar a dónde lleva una tarjeta es inmediato: no hace falta reimprimir ni regrabar el NFC.</li>
           </ul>
@@ -523,7 +582,7 @@ async function renderNfc() {
       </div>
       <div class="panel">
         <h3 class="display" style="font-size:20px;margin-bottom:8px">Últimas validaciones</h3>
-        ${log.length ? `<ul class="hist log-list">${log.slice(0, 40).map((l) => `<li><span><b>${esc(l.name)}</b> ${esc(LOG_TYPE[l.type] || l.type)}${l.earned ? ' · ¡ganó premio!' : ''}${l.via === 'admin' ? ' · desde el panel' : l.card ? ` · ${esc(l.card)}` : ''}</span><span>${esc(fmtTs(l.at))}</span></li>`).join('')}</ul>` : '<p class="muted">Todavía no hay validaciones.</p>'}
+        ${log.length ? `<ul class="hist log-list">${log.slice(0, 40).map((l) => `<li><span><b>${esc(l.name)}</b> ${esc(LOG_TYPE[l.type] || l.type)}${l.earned ? ' · ¡ganó premio!' : ''}${l.via === 'admin' ? ' · desde el panel' : l.card ? ` · ${esc(l.card)}` : ''}${l.barber ? ` · validó ${esc(l.barber)}` : ''}</span><span>${esc(fmtTs(l.at))}</span></li>`).join('')}</ul>` : '<p class="muted">Todavía no hay validaciones.</p>'}
       </div>
     </div>
 
@@ -707,7 +766,7 @@ function renderSettings() {
           <div class="ranges">${h.open ? [0, 1].map((k) => `
             <input class="input" type="time" data-day="${d}" data-r="${k}" data-e="0" value="${esc(h[k][0])}" aria-label="${DAY_NAMES[d]} franja ${k + 1} desde">
             <span class="sep">a</span>
-            <input class="input" type="time" data-day="${d}" data-r="${k}" data-e="1" value="${esc(h[k][1])}" aria-label="${DAY_NAMES[d]} franja ${k + 1} hasta">
+            <input class="input" type="time" data-day="${d}" data-r="${k}" data-e="1" value="${esc(h[k][1] === '24:00' ? '00:00' : h[k][1])}" aria-label="${DAY_NAMES[d]} franja ${k + 1} hasta">
             ${k === 0 ? '<span class="sep">·</span>' : ''}`).join('') : '<span class="muted">Cerrado</span>'}</div>
         </div>`;
       }).join('')}
@@ -723,8 +782,21 @@ function renderSettings() {
       <div class="grid2">
         ${lf('Cortes para el premio', inp('loyalty.goal', draft.loyalty.goal, 'data-num inputmode="numeric"'))}
         ${lf('Premio', inp('loyalty.reward', draft.loyalty.reward))}
+      </div>
+    </section>
+
+    <section class="card set-sec"><h2>Validación de cortes</h2>
+      <p class="hint">Cómo se confirma cada corte cuando el cliente apoya el celu o escanea la tarjeta. Así, copiar el link de la tarjeta no alcanza.</p>
+      <div class="grid2">
+        <div class="field"><label for="valMode">Modo</label><select class="select" id="valMode" data-path="validation.mode">
+          <option value="pin" ${draft.validation.mode !== 'approval' ? 'selected' : ''}>PIN del barbero (lo pone en el celu del cliente)</option>
+          <option value="approval" ${draft.validation.mode === 'approval' ? 'selected' : ''}>Aprobación desde el panel</option>
+        </select></div>
         ${lf('Horas mínimas entre validaciones', inp('validation.cooldownHours', draft.validation.cooldownHours, 'data-num inputmode="numeric"'))}
       </div>
+      <h3 class="mini-label" style="margin:20px 0 10px">PIN de validación de cada barbero</h3>
+      <p class="hint">Es distinto del PIN del panel y no se muestra en ningún lado. Se usa en el modo "PIN del barbero". Cambialo cuando quieras.</p>
+      <div class="stack" id="staffPins"><div class="spinner"></div></div>
     </section>
 
     <section class="card set-sec"><h2>Membresías</h2>
@@ -754,13 +826,35 @@ function renderSettings() {
     </section>
 
     <div class="save-bar"><span id="saveState">${dirty ? 'Cambios sin guardar' : 'Todo guardado'}</span><button class="btn btn-gold" id="saveSettings">Guardar cambios</button></div>`;
+  loadStaff();
+}
+
+async function loadStaff(data) {
+  const box = $('staffPins');
+  if (!box) return;
+  try {
+    const st = data || await call('GET', '/admin/staff');
+    const none = !st.barbers.some((b) => b.hasPin);
+    box.innerHTML = `${none && st.mode !== 'approval' ? '<div class="notice" style="margin:0">Ningún barbero tiene PIN de validación: los clientes no van a poder sumar cortes hasta que cargues uno.</div>' : ''}
+      ${st.barbers.map((b) => `<div class="staff-row">
+        <div><b>${esc(b.name)}</b> ${b.hasPin ? '<span class="pill ok">PIN cargado</span>' : '<span class="pill dim">Sin PIN</span>'}</div>
+        <div class="inline">
+          <input class="input" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="${b.hasPin ? 'Nuevo PIN' : 'PIN de 4 a 6 números'}" data-staffpin="${esc(b.id)}" aria-label="PIN de ${esc(b.name)}">
+          <button class="btn btn-line btn-sm" data-savepin="${esc(b.id)}" style="--h:52px">Guardar</button>
+          ${b.hasPin ? `<button class="btn btn-ghost" data-clearpin="${esc(b.id)}">Quitar</button>` : ''}
+        </div>
+      </div>`).join('')}
+      <p class="hint">¿Agregaste un barbero? Primero tocá <b>Guardar cambios</b> y después cargale el PIN.</p>`;
+  } catch (e) {
+    box.innerHTML = `<p class="hint">${esc(e.message)}</p>`;
+  }
 }
 
 const markDirty = () => { dirty = true; const s = $('saveState'); if (s) s.textContent = 'Cambios sin guardar'; };
 
 $('tab-ajustes').addEventListener('input', (e) => {
   const el = e.target;
-  const val = el.hasAttribute('data-num') ? Number(el.value) : el.value;
+  const val = el.hasAttribute('data-num') ? Number(el.value.replace(/[^\d]/g, '') || 0) : el.value;
   if (el.dataset.path) {
     const keys = el.dataset.path.split('.');
     let o = draft;
@@ -781,14 +875,27 @@ $('tab-ajustes').addEventListener('change', (e) => {
     if (el.checked && !h[0][0]) h[0] = ['10:00', '20:00'];
     markDirty();
     renderSettings();
-  } else if (el.tagName === 'SELECT' && el.dataset.path) {
-    draft[el.dataset.path] = Number(el.value);
-    markDirty();
   }
 });
 $('tab-ajustes').addEventListener('click', async (e) => {
   const t = e.target.closest('button');
   if (!t) return;
+  if (t.dataset.savepin || t.dataset.clearpin) {
+    const id = t.dataset.savepin || t.dataset.clearpin;
+    const pin = t.dataset.savepin ? $('tab-ajustes').querySelector(`[data-staffpin="${CSS.escape(id)}"]`).value.trim() : null;
+    if (t.dataset.savepin && !/^\d{4,6}$/.test(pin)) { toast('El PIN tiene que tener de 4 a 6 números.', 'bad'); return; }
+    if (t.dataset.clearpin && !confirm('¿Quitar el PIN de este barbero? No va a poder validar cortes hasta que cargue otro.')) return;
+    t.disabled = true;
+    try {
+      const st = await call('POST', '/admin/staff', { barberId: id, pin });
+      toast(pin ? 'PIN guardado.' : 'PIN quitado.', 'ok');
+      loadStaff(st);
+    } catch (err) {
+      toast(err.message, 'bad');
+      t.disabled = false;
+    }
+    return;
+  }
   if (t.dataset.del) {
     draft[t.dataset.del].splice(Number(t.dataset.i), 1);
     markDirty();
@@ -830,6 +937,7 @@ $('tab-ajustes').addEventListener('click', async (e) => {
       dirty = false;
       draft = null;
       renderSettings();
+      startPendingPoll();
       toast('Ajustes guardados. La web ya muestra los cambios.', 'ok');
     } catch (err) {
       toast(err.message, 'bad');

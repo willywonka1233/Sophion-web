@@ -121,7 +121,7 @@ function bookingHtml(b, { actions = false } = {}) {
 // ---------------- tarjeta ----------------
 function renderCard() {
   const u = user;
-  const left = u.goal - u.stamps;
+  const left = Math.max(0, u.goal - u.stamps);
   const m = u.membership;
   const next = upcoming()[0];
   let memberHtml = '';
@@ -210,7 +210,7 @@ function renderBooking() {
   const svcs = settings.services;
   if (!svcs.find((s) => s.id === bk.serviceId)) bk.serviceId = svcs[0]?.id;
   const days = openDays();
-  if (!bk.date || !days.find((d) => d.date === bk.date && d.open)) bk.date = days.find((d) => d.open)?.date || null;
+  if (!bk.date || !days.find((d) => d.date === bk.date && d.open)) { bk.date = days.find((d) => d.open)?.date || null; bk.autoDay = true; }
   const full = upcoming().length >= settings.maxActiveBookings;
   const multi = settings.barbers.length > 1;
   let n = 0;
@@ -258,7 +258,7 @@ $('tab-reservar').addEventListener('click', (e) => {
   if (b && group) {
     if (group === 'service') bk.serviceId = b.dataset.val;
     if (group === 'barber') bk.barberId = b.dataset.val;
-    if (group === 'day') bk.date = b.dataset.val;
+    if (group === 'day') { bk.date = b.dataset.val; bk.autoDay = false; }
     b.closest('[data-group]').querySelectorAll('[data-val]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     bk.time = null;
     loadSlots();
@@ -290,6 +290,17 @@ async function loadSlots() {
     box.innerHTML = `<div class="empty">${esc(err.message)}<button class="btn btn-line btn-sm" id="retrySlots">Reintentar</button></div>`;
     $('retrySlots').onclick = loadSlots;
     return;
+  }
+  if (!bk.slots.length && bk.autoDay) {
+    // El día se eligió solo y ya no tiene horarios (por ejemplo, hoy a la noche): pasa al siguiente abierto.
+    const next = openDays().find((d) => d.open && d.date > bk.date);
+    bk.autoDay = false;
+    if (next) {
+      bk.date = next.date;
+      $('tab-reservar').querySelectorAll('.day').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.val === bk.date)));
+      $('tab-reservar').querySelector('.day[aria-pressed="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+      return loadSlots();
+    }
   }
   if (!bk.slots.length) {
     box.innerHTML = `<div class="empty">No quedan horarios libres ${relDay(bk.date) === 'Hoy' ? 'hoy' : 'este día'}. Probá otro día${settings.barbers.length > 1 && bk.barberId !== 'any' ? ' u otro barbero' : ''}.</div>`;
@@ -361,14 +372,21 @@ function showDone(b) {
   openModal('doneModal');
 }
 
-// ---------------- validación NFC ----------------
-function sealShow(html) {
+// ---------------- validación del corte (NFC / QR) ----------------
+// Según Ajustes, el corte se confirma con el PIN del barbero (en este celu) o con su aprobación
+// desde el panel. Así copiar el link de la tarjeta no alcanza para sumar cortes.
+let sealChoice = false; // ¿usa el premio en este corte?
+let pollTimer = null;
+const sealMode = () => (settings.validation?.mode === 'approval' ? 'approval' : 'pin');
+
+function sealShow(html, focus = 'button,a') {
   $('sealBox').innerHTML = html;
   $('seal').hidden = false;
   document.body.style.overflow = 'hidden';
-  $('sealBox').querySelector('button,a')?.focus({ preventScroll: true });
+  $('sealBox').querySelector(focus)?.focus({ preventScroll: true });
 }
 function sealClose() {
+  clearInterval(pollTimer);
   $('seal').hidden = true;
   document.body.style.overflow = '';
   history.replaceState(null, '', '/cuenta#tarjeta');
@@ -378,16 +396,28 @@ $('seal').addEventListener('click', (e) => {
   const a = e.target.closest('[data-seal]');
   if (!a) return;
   if (a.dataset.seal === 'close') sealClose();
-  if (a.dataset.seal === 'reward') validate(true);
-  if (a.dataset.seal === 'stamp') validate(false);
-  if (a.dataset.seal === 'retry') validate(false);
+  if (a.dataset.seal === 'reward') choose(true);
+  if (a.dataset.seal === 'stamp') choose(false);
+  if (a.dataset.seal === 'retry') choose(sealChoice); // reintenta con la misma elección (premio o sello)
+});
+$('seal').addEventListener('submit', (e) => {
+  if (e.target.id !== 'staffForm') return;
+  e.preventDefault();
+  const pin = $('staffPin').value.replace(/\D/g, '');
+  if (pin.length < 4) { $('staffErr').textContent = 'El PIN del barbero tiene de 4 a 6 números.'; $('staffPin').focus(); return; }
+  validate(pin);
 });
 
 const WAIT = `<div class="seal-mark wait"><span class="core">${CROWN}</span></div>`;
 const burst = () => Array.from({ length: 16 }, (_, i) => `<i class="burst" style="--a:${i * 22.5}deg;animation-delay:${0.25 + (i % 3) * 0.05}s"></i>`).join('');
+const SCISSORS = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="18" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.2 7.4L20 18M8.2 16.6L20 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
 function startSeal() {
   sealPending = false;
+  if (user.nextValidationAt && user.nextValidationAt > Date.now()) {
+    // Ya validó hace poco: avisar antes de hacerle buscar al barbero.
+    return sealError({ status: 429, data: { nextAt: user.nextValidationAt } });
+  }
   if (user.rewards > 0) {
     sealShow(`${WAIT.replace(' wait', '')}
       <h1 id="sealTitle">¡Tenés un premio!</h1>
@@ -398,68 +428,148 @@ function startSeal() {
       </div>`);
     return;
   }
-  validate(false);
+  choose(false);
 }
 
-async function validate(useReward) {
-  sealShow(`${WAIT}<h1 id="sealTitle">Validando tu corte…</h1><p>Un segundo.</p>`);
-  try {
-    const r = await api('POST', '/validate', { ...sealCred, useReward }, token);
-    history.replaceState(null, '', '/cuenta#tarjeta'); // así recargar no intenta validar de nuevo
-    saveSession(null, r.user);
-    navigator.vibrate?.([30, 60, 30]);
-    const u = r.user;
-    let title;
-    let text;
-    let extra = '';
-    if (r.result.type === 'reward') {
-      title = '¡Disfrutá tu premio!';
-      text = `Canjeaste tu <b>${esc(u.reward.toLowerCase())}</b>. Gracias por elegir Lord.`;
-    } else if (r.result.type === 'membership') {
-      const m = u.membership;
-      title = '¡Corte de membresía!';
-      text = `Te ${m.left === 1 ? 'queda' : 'quedan'} <b>${m.left} de ${m.cuts}</b> cortes de tu ${esc(m.name)}. Vence el ${esc(fmtTsDate(m.expiresAt))}.`;
-    } else if (r.result.earned) {
-      title = '¡Completaste tu tarjeta!';
-      text = `Ganaste <b>${esc(u.reward.toLowerCase())}</b>. Usalo la próxima vez que apoyes el celu.`;
-      extra = stampsHtml(u.goal, u.goal, u.goal - 1);
-    } else {
-      const left = u.goal - u.stamps;
-      title = '¡Corte sumado!';
-      text = `Llevás <b>${u.stamps} de ${u.goal}</b>. ${left === 1 ? 'Te falta 1' : `Te faltan ${left}`} para tu ${esc(u.reward.toLowerCase())}.`;
-      extra = stampsHtml(u.stamps, u.goal, u.stamps - 1);
-    }
-    sealShow(`<div class="seal-mark"><span class="ring"></span><span class="ring"></span><span class="core">${CROWN}</span>${burst()}</div>
-      <h1 id="sealTitle">${title}</h1><p>${text}</p>${extra}
-      <div class="seal-actions"><button class="btn btn-gold btn-block" data-seal="close">Ver mi tarjeta</button></div>`);
-  } catch (err) {
-    if (err.status === 401) {
-      clearSession();
-      sealPending = true;
-      $('seal').hidden = true;
-      document.body.style.overflow = '';
-      showAuth();
-      toast(err.message, 'bad');
-      return;
-    }
-    let title = 'No pudimos validar';
-    let text = esc(err.message);
-    let btn = '<button class="btn btn-gold btn-block" data-seal="retry">Reintentar</button>';
-    if (err.status === 429) {
-      title = 'Este corte ya está sumado';
-      text = err.data?.nextAt
-        ? `Ya registraste un corte hace poco. Vas a poder validar otro desde el ${esc(fmtTs(err.data.nextAt))}.`
-        : 'Ya registraste un corte hace poco.';
-      btn = '';
-      history.replaceState(null, '', '/cuenta#tarjeta');
-    } else if (err.status === 403) {
-      title = 'Código vencido';
-      btn = '';
-    }
-    sealShow(`<div class="seal-mark bad"><span class="core">${CROWN}</span></div>
-      <h1 id="sealTitle">${title}</h1><p>${text}</p>
-      <div class="seal-actions">${btn}<button class="btn btn-line btn-block" data-seal="close">Ver mi tarjeta</button></div>`);
+function choose(useReward) {
+  sealChoice = useReward;
+  if (sealMode() === 'approval') validate();
+  else showPinScreen();
+}
+
+function showPinScreen(errMsg = '') {
+  sealShow(`<div class="seal-mark"><span class="core">${SCISSORS}</span></div>
+    <h1 id="sealTitle">Pasale el celu al barbero</h1>
+    <p>Para confirmar ${sealChoice ? 'el canje de tu premio' : 'tu corte'}, el barbero pone su PIN.</p>
+    <form id="staffForm" class="staff-form" autocomplete="off">
+      <input id="staffPin" class="input staff-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="PIN del barbero" aria-label="PIN del barbero" aria-describedby="staffErr">
+      <p class="error-msg" id="staffErr" role="alert">${esc(errMsg)}</p>
+      <button class="btn btn-gold btn-block" type="submit">Confirmar corte</button>
+    </form>
+    <div class="seal-actions"><button class="btn btn-ghost" data-seal="close">Cancelar</button></div>`, '#staffPin');
+}
+
+async function validate(staffPin) {
+  const form = $('staffForm');
+  if (staffPin && form) {
+    // Con el PIN no se cambia de pantalla mientras valida: si está mal, solo se marca el error.
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+  } else {
+    sealShow(`${WAIT}<h1 id="sealTitle">${sealMode() === 'approval' ? 'Avisando al barbero…' : 'Validando tu corte…'}</h1><p>Un segundo.</p>`);
   }
+  try {
+    const r = await api('POST', '/validate', { ...sealCred, useReward: sealChoice, ...(staffPin ? { staffPin } : {}) }, token);
+    if (r.pending) return waitApproval(r.pending.id);
+    showSuccess(r);
+  } catch (err) {
+    sealError(err);
+  }
+}
+
+function waitApproval(id) {
+  sealShow(`<div class="seal-mark wait"><span class="ring"></span><span class="ring"></span><span class="core">${CROWN}</span></div>
+    <h1 id="sealTitle">Esperando al barbero…</h1>
+    <p>Avisale que apruebe ${sealChoice ? 'el canje de tu premio' : 'tu corte'} en el panel. Dejá esta pantalla abierta.</p>
+    <div class="seal-actions"><button class="btn btn-ghost" data-seal="close">Cancelar</button></div>`);
+  clearInterval(pollTimer);
+  const tick = async () => {
+    if ($('seal').hidden) { clearInterval(pollTimer); return; }
+    try {
+      const st = await api('GET', `/validate/status?id=${encodeURIComponent(id)}`, null, token);
+      if (st.status === 'approved') { clearInterval(pollTimer); showSuccess(st); }
+      if (st.status === 'rejected' || st.status === 'failed') {
+        clearInterval(pollTimer);
+        showSealMessage('No se aprobó el corte', esc(st.error || 'El barbero no aprobó el pedido.'), true);
+      }
+      if (st.status === 'expired') {
+        clearInterval(pollTimer);
+        showSealMessage('Se venció el pedido', 'Pasaron más de 10 minutos sin respuesta. Volvé a intentarlo.', true);
+      }
+    } catch (err) {
+      if (err.status === 401 || err.status === 404) { clearInterval(pollTimer); sealError(err); }
+      // sin conexión: sigue intentando
+    }
+  };
+  pollTimer = setInterval(tick, 2500);
+  tick();
+}
+
+function showSuccess(r) {
+  history.replaceState(null, '', '/cuenta#tarjeta'); // así recargar no intenta validar de nuevo
+  saveSession(null, r.user);
+  navigator.vibrate?.([30, 60, 30]);
+  const u = r.user;
+  let title;
+  let text;
+  let extra = '';
+  if (r.result.type === 'reward') {
+    title = '¡Disfrutá tu premio!';
+    text = `Canjeaste tu <b>${esc(u.reward.toLowerCase())}</b>. Gracias por elegir Lord.`;
+  } else if (r.result.type === 'membership') {
+    const m = u.membership;
+    title = '¡Corte de membresía!';
+    text = `Te ${m.left === 1 ? 'queda' : 'quedan'} <b>${m.left} de ${m.cuts}</b> cortes de tu ${esc(m.name)}. Vence el ${esc(fmtTsDate(m.expiresAt))}.`;
+  } else if (r.result.earned) {
+    title = '¡Completaste tu tarjeta!';
+    text = `Ganaste <b>${esc(u.reward.toLowerCase())}</b>. Usalo la próxima vez que apoyes el celu.`;
+    extra = stampsHtml(u.goal, u.goal, u.goal - 1);
+  } else {
+    const left = Math.max(0, u.goal - u.stamps);
+    title = '¡Corte sumado!';
+    text = `Llevás <b>${u.stamps} de ${u.goal}</b>. ${left === 1 ? 'Te falta 1' : `Te faltan ${left}`} para tu ${esc(u.reward.toLowerCase())}.`;
+    extra = stampsHtml(u.stamps, u.goal, u.stamps - 1);
+  }
+  sealShow(`<div class="seal-mark"><span class="ring"></span><span class="ring"></span><span class="core">${CROWN}</span>${burst()}</div>
+    <h1 id="sealTitle">${title}</h1><p>${text}</p>${extra}
+    <div class="seal-actions"><button class="btn btn-gold btn-block" data-seal="close">Ver mi tarjeta</button></div>`);
+}
+
+function showSealMessage(title, html, retry) {
+  sealShow(`<div class="seal-mark bad"><span class="core">${CROWN}</span></div>
+    <h1 id="sealTitle">${title}</h1><p>${html}</p>
+    <div class="seal-actions">${retry ? '<button class="btn btn-gold btn-block" data-seal="retry">Reintentar</button>' : ''}<button class="btn btn-line btn-block" data-seal="close">Ver mi tarjeta</button></div>`);
+}
+
+function sealError(err) {
+  if (err.status === 401) {
+    clearSession();
+    sealPending = true;
+    $('seal').hidden = true;
+    document.body.style.overflow = '';
+    showAuth();
+    toast(err.message, 'bad');
+    return;
+  }
+  const need = err.data?.need;
+  if (need === 'pin' && err.status !== 423) {
+    const left = err.data?.attemptsLeft;
+    const msg = `${err.message}${left ? ` Te ${left === 1 ? 'queda 1 intento' : `quedan ${left} intentos`}.` : ''}`;
+    const form = $('staffForm');
+    if (!form) return showPinScreen(msg);
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = false;
+    btn.textContent = 'Confirmar corte';
+    $('staffErr').textContent = msg;
+    $('staffPin').value = '';
+    $('staffPin').classList.remove('shake');
+    void $('staffPin').offsetWidth; // reinicia la animación
+    $('staffPin').classList.add('shake');
+    $('staffPin').focus();
+    navigator.vibrate?.(120);
+    return;
+  }
+  if (err.status === 423) return showSealMessage('PIN bloqueado por un rato', esc(err.message), false);
+  if (need === 'setup') return showSealMessage('Falta configurar el PIN', esc(err.message), false);
+  if (err.status === 429) {
+    history.replaceState(null, '', '/cuenta#tarjeta');
+    return showSealMessage('Este corte ya está sumado', err.data?.nextAt
+      ? `Ya registraste un corte hace poco. Vas a poder validar otro desde el ${esc(fmtTs(err.data.nextAt))}.`
+      : 'Ya registraste un corte hace poco.', false);
+  }
+  if (err.status === 403) return showSealMessage('Código vencido', esc(err.message), false);
+  return showSealMessage('No pudimos validar', esc(err.message), true);
 }
 
 // ---------------- ingresar / registrarse ----------------

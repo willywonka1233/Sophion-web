@@ -64,6 +64,10 @@ export const DEFAULTS = {
   // Validación por NFC
   validation: {
     cooldownHours: 12,   // un mismo cliente no puede validar dos cortes en menos de este tiempo
+    // Cómo se confirma cada corte (así copiar el link de la tarjeta no alcanza):
+    //  'pin'      → el barbero pone su PIN de validación en el celu del cliente
+    //  'approval' → el barbero lo aprueba desde el panel
+    mode: 'pin',
   },
 };
 

@@ -29,7 +29,13 @@ export async function api(method, path, body, token) {
 // Ajustes públicos del local (si la API no responde, usa los valores por defecto).
 let cfgPromise;
 export function loadConfig() {
-  cfgPromise ||= api('GET', '/config').then((d) => d.settings).catch(() => structuredClone(DEFAULTS));
+  cfgPromise ||= api('GET', '/config')
+    .catch(() => new Promise((r) => setTimeout(r, 1200)).then(() => api('GET', '/config')))
+    .then((d) => d.settings)
+    .catch(() => {
+      cfgPromise = null; // la próxima vez vuelve a intentar en vez de quedarse con los valores de ejemplo
+      return { ...structuredClone(DEFAULTS), offline: true };
+    });
   return cfgPromise;
 }
 
@@ -81,7 +87,7 @@ export function contactLink(settings, text) {
 export function hoursSummary(settings) {
   // Agrupa días consecutivos con el mismo horario: "Lun a Vie · 10:00–13:00 / 16:00–21:00"
   const order = [1, 2, 3, 4, 5, 6, 0];
-  const txt = (d) => (settings.hours[d] || []).map(([a, b]) => `${a}–${b}`).join(' / ') || 'Cerrado';
+  const txt = (d) => (settings.hours[d] || []).map(([a, b]) => `${a}–${b === '24:00' ? '00:00' : b}`).join(' / ') || 'Cerrado';
   const groups = [];
   for (const d of order) {
     const t = txt(d);

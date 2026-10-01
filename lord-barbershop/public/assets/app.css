@@ -193,3 +193,10 @@ body.app .toasts{bottom:calc(100px + env(safe-area-inset-bottom))}
 .acct{display:grid;gap:16px}
 .acct-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line-2);font-size:15px}
 .acct-row span:first-child{color:var(--muted)}
+
+/* PIN del barbero en la pantalla de validación */
+.staff-form{display:grid;gap:10px;width:100%}
+.staff-pin{height:62px;text-align:center;font:600 26px var(--f-sans);letter-spacing:.5em;padding-left:.5em}
+.staff-pin::placeholder{font:400 16px var(--f-sans);letter-spacing:.06em}
+.staff-pin.shake{animation:shake .45s var(--ease);border-color:var(--danger)}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}

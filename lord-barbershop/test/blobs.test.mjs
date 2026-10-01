@@ -35,6 +35,7 @@ async function call(method, p, { body, token } = {}) {
 test('la API usa el contexto de Blobs de cada pedido (no reutiliza tokens viejos)', { timeout: 30000 }, async () => {
   const admin = (await call('POST', '/api/admin/login', { body: { pin: '2468' } })).data.token;
   const cards = (await call('GET', '/api/admin/cards', { token: admin })).data.cards;
+  assert.equal((await call('POST', '/api/admin/staff', { token: admin, body: { barberId: 'b1', pin: '5678' } })).status, 200);
   assert.equal((await call('GET', '/api/config')).status, 200);
   assert.equal((await call('GET', `/t/${cards[0].code}`)).status, 302);
 
@@ -50,7 +51,7 @@ test('la API usa el contexto de Blobs de cada pedido (no reutiliza tokens viejos
   assert.equal((await call('GET', '/api/slots?date=2030-01-07&service=corte')).status, 200);
   const reg = await call('POST', '/api/register', { body: { name: 'Prueba', phone: '3564000001', pin: '1234' } });
   assert.equal(reg.status, 200, JSON.stringify(reg.data));
-  const v = await call('POST', '/api/validate', { token: reg.data.token, body: { c: cards[0].code } });
+  const v = await call('POST', '/api/validate', { token: reg.data.token, body: { c: cards[0].code, staffPin: '5678' } });
   assert.equal(v.status, 200, JSON.stringify(v.data));
   await server.stop();
 });
